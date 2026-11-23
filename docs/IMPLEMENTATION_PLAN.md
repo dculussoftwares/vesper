@@ -251,8 +251,13 @@ AI (Firebase AI Logic from the app).
 **Firestore rules** are the main security boundary for everything done without Functions: see the table in section 7.
 Device docs, link-token claiming and deletes are denied to clients and go through Functions only.
 
-**Every Function** uses the shared secure wrapper from M7-02: App Check enforced, auth and role checked in code,
+**Every callable Function** uses the shared secure wrapper from M7-02: App Check enforced, auth and role checked in code,
 `zod` input validation, per-uid rate limits, its own least-privilege service account, and no personal data in logs.
+**Every event-triggered Function** (`notifyParent`, `notifyParentAlert`, `sendWelcomeEmail`) has no caller to authenticate:
+it is private (no public invoker; only its own Eventarc service account may call it), validates the event data with `zod`,
+relies on the originating write's `firestore.rules`, takes its recipients from trusted sources (the parent's FCM tokens,
+the Auth account's email; never client-written fields), has its own least-privilege service account, is not retried when
+a duplicate would be worse than a miss, and keeps personal data out of errors and logs.
 Deployed only by Terraform (M7-02), never by `firebase deploy`.
 
 ---

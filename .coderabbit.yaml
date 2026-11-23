@@ -57,10 +57,14 @@ reviews:
         Flag any rule that lets a client create device docs, claim link tokens or write another user's data.
     - path: "firebase/functions/**"
       instructions: |
-        Only the functions in plan §8 may exist (6 callable/trigger functions plus `sendWelcomeEmail`, the welcome-email
-        Eventarc trigger: recipient from Firebase Auth, never from client-written fields). Each must use the shared secure wrapper: App Check enforced,
-        request.auth required with the caller's role checked, zod input validation, per-uid rate limiting,
-        transactions for multi-document writes, typed HttpsErrors without internal details, no personal data in logs.
+        Only the functions in plan §8 may exist (6 callable/Firestore-trigger functions plus `sendWelcomeEmail`).
+        Callable functions must use the shared secure wrapper: App Check enforced, request.auth required with the
+        caller's role checked, zod input validation, per-uid rate limiting, transactions for multi-document writes,
+        typed HttpsErrors without internal details, no personal data in logs.
+        Event-triggered functions (notifyParent, notifyParentAlert, sendWelcomeEmail) have no caller: they must be
+        private (invoked only by their own Eventarc service account), validate the event data with zod, rely on the
+        originating write's firestore.rules, take recipients from trusted sources (never client-written fields), have
+        their own least-privilege service account, and keep addresses and other personal data out of errors and logs.
     - path: ".github/workflows/**"
       instructions: |
         Public repo: third-party actions pinned to full commit SHAs, minimal `permissions`, secrets never exposed to
