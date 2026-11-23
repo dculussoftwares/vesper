@@ -138,3 +138,26 @@ variable "web_hostname" {
   type        = string
   default     = "vesper.dculus.com"
 }
+
+variable "aws_account_id" {
+  description = "AWS account that holds SES (infra/aws). Public value."
+  type        = string
+}
+
+variable "aws_region" {
+  description = "AWS region of the SES identity (infra/aws)."
+  type        = string
+  default     = "ap-south-1"
+}
+
+variable "aws_web_identity_audience" {
+  description = "Audience of the Google ID token that sendWelcomeEmail exchanges for AWS credentials. Must match infra/aws (web_identity_audience)."
+  type        = string
+  default     = "vesper-ses-sender"
+}
+
+variable "mail_from" {
+  description = "Sender address of the welcome email. Its domain must be a verified SES identity (infra/aws)."
+  type        = string
+  default     = "hello@mail.vesper.dculus.com"
+}

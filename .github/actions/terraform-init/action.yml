@@ -1,11 +1,11 @@
 name: terraform-init
 description: >
   Load infra/prod.env, log in to GCP without keys (Workload Identity Federation) and run terraform init for one
-  module with its state in the GCS bucket. The calling job needs `permissions: id-token: write`.
+  module with its state in the GCS bucket. The aws module also logs in to AWS without keys (GitHub OIDC). The calling job needs `permissions: id-token: write`.
 
 inputs:
   module:
-    description: "Terraform root under infra/: seed, gcp, github or cloudflare."
+    description: "Terraform root under infra/: seed, gcp, github, cloudflare or aws."
     required: true
   identity:
     description: "plan (read-only, any job of this repo) or deploy (only jobs in the GitHub environment prod)."
@@ -42,6 +42,14 @@ runs:
       with:
         workload_identity_provider: ${{ env.GCP_WIF_PROVIDER }}
         service_account: ${{ inputs.identity == 'deploy' && env.GCP_DEPLOY_SA || env.GCP_PLAN_SA }}
+
+    # AWS (infra/aws): the job's GitHub OIDC token is exchanged for a short-lived role session. The deploy role only
+    # trusts the `prod` environment, the plan role is read-only (see infra/seed-aws/bootstrap.sh).
+    - if: inputs.module == 'aws'
+      uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+      with:
+        role-to-assume: ${{ inputs.identity == 'deploy' && env.AWS_DEPLOY_ROLE_ARN || env.AWS_PLAN_ROLE_ARN }}
+        aws-region: ${{ env.AWS_REGION }}
 
     - name: terraform init
       shell: bash
