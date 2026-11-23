@@ -5,6 +5,7 @@ name: infra
 #   infra/gcp     Firebase, Auth, Firestore + rules, App Check, Functions, AI Logic, monitoring, budgets
 #   infra/github  repo settings, ruleset, `prod` environment, backlog labels/milestones/issues
 #   infra/cloudflare  the website's Worker and its custom domain (vesper.dculus.com); never deletes anything
+#   infra/aws     Amazon SES for the welcome email (domain identity, DKIM) + its Cloudflare DNS records; keyless AWS login
 #
 # PR:    validate every module; plan every module with the read-only identity; one comment per module.
 # Merge: apply seed, then github, gcp and cloudflare, in the GitHub environment `prod` (the only place the deploy identity works).
@@ -54,7 +55,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        module: [seed, gcp, github, cloudflare]
+        module: [seed, gcp, github, cloudflare, aws]
     defaults:
       run:
         working-directory: infra/${{ matrix.module }}
@@ -88,6 +89,9 @@ jobs:
           # Read-only Cloudflare token (repository secret); the edit token is only in the `prod` environment.
           - module: cloudflare
             plan_args: ""
+          # AWS read-only role + the read-only Cloudflare token (it also reads the DNS zone).
+          - module: aws
+            plan_args: ""
     permissions:
       contents: read
       id-token: write
@@ -102,7 +106,7 @@ jobs:
       TF_VAR_google_oauth_client_secret: ${{ secrets.GOOGLE_OAUTH_WEB_CLIENT_SECRET }}
       TF_VAR_app_check_debug_tokens: ${{ secrets.APP_CHECK_DEBUG_TOKENS || '{}' }}
       TF_VAR_alert_email: ${{ secrets.ALERT_EMAIL }}
-      CLOUDFLARE_API_TOKEN: ${{ matrix.module == 'cloudflare' && secrets.CLOUDFLARE_API_TOKEN_READ || '' }}
+      CLOUDFLARE_API_TOKEN: ${{ (matrix.module == 'cloudflare' || matrix.module == 'aws') && secrets.CLOUDFLARE_API_TOKEN_READ || '' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -233,4 +237,27 @@ jobs:
           module: cloudflare
           identity: deploy
       - working-directory: infra/cloudflare
+        run: terraform apply -auto-approve
+
+  # SES + its DNS. After apply-gcp: the AWS role trusts the Cloud Function's service account, whose ID is an output of
+  # the gcp module.
+  apply-aws:
+    needs: apply-gcp
+    runs-on: ubuntu-latest
+    environment: prod
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      TF_VAR_alert_email: ${{ secrets.ALERT_EMAIL }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/terraform-init
+        with:
+          module: aws
+          identity: deploy
+      - working-directory: infra/aws
         run: terraform apply -auto-approve

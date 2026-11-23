@@ -14,13 +14,29 @@ There is **one GCP project** (`vesper-prod-31275`, org `natheeshece-org`). Debug
 | `infra/gcp` | Firebase project and apps, Auth, Firestore + rules, App Check, Cloud Functions, AI Logic, monitoring, budgets | `gcp/` |
 | `infra/github` | Repo settings, `main` ruleset, `prod` environment, Pages, backlog labels/milestones/issues | `github/` |
 | `infra/cloudflare` | The website's Worker (`vesper-web`) and its custom domain `vesper.dculus.com` (DNS record + certificate) | `cloudflare/` |
+| `infra/aws` | Amazon SES for the welcome email: the `mail.vesper.dculus.com` identity (DKIM, custom MAIL FROM), its Cloudflare DNS records (incl. DMARC), the AWS role the Cloud Function assumes, a budget alert | `aws/` |
 
-One workflow runs all four: `.github/workflows/infra.yml`.
+One workflow runs all five: `.github/workflows/infra.yml`.
 
 - **PR:** `validate` (every module, no credentials, forks too), then `plan` (every module, read-only identity, one PR comment per module).
-- **Merge to `main`:** `apply-seed`, then `apply-gcp`, `apply-github` and `apply-cloudflare`, in the GitHub environment `prod`. No approval step: merging is the approval.
+- **Merge to `main`:** `apply-seed`, then `apply-gcp`, `apply-github` and `apply-cloudflare`, then `apply-aws` (after `apply-gcp`), in the GitHub environment `prod`. No approval step: merging is the approval.
 
 `backlog-board.yml` updates the kanban board when an issue closes or reopens.
+
+## Welcome email (Amazon SES)
+
+The Cloud Function `sendWelcomeEmail` fires when the app creates the parent's profile `users/{uid}` (first sign-up, email or
+Google) and sends one email from `hello@mail.vesper.dculus.com` through SES (`ap-south-1`, production access, Essentials plan).
+
+- **No AWS keys anywhere.** GitHub Actions logs in with OIDC (`aws-actions/configure-aws-credentials`) to the roles
+  `vesper-tf-deploy` (only the `prod` environment) and `vesper-tf-plan` (read-only). The function presents its Google
+  identity token and assumes `vesper-welcome-email-sender`, which trusts only that service account (`infra/aws/iam.tf`).
+- **One-time AWS bootstrap:** `infra/seed-aws/bootstrap.sh`, run with an admin identity (CLI). It creates the GitHub OIDC
+  provider and the two roles, and prints the public values kept in `infra/prod.env`. Then delete any long-lived access key.
+  Forks: set `GITHUB_SUBJECT_PREFIX` to your own immutable subject prefix.
+- **DNS** (DKIM, MAIL FROM MX/SPF, DMARC under `mail.vesper.dculus.com`) is Terraform (Cloudflare edit token, same one as
+  `infra/cloudflare`). The `dculus.com` zone itself is not managed.
+- **Copy** of the email: `firebase/functions/src/lib/welcomeEmail.ts`.
 
 ## How CI logs in to GCP (no keys)
 

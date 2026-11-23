@@ -26,7 +26,7 @@ contract all stories refer to. Agent prompts and the parallel execution order ar
 | Packages | `com.dculus.vesper` (main app), `com.dculus.vesper.kids` (Kids app) |
 | Two apps | `:app` = self-control + parent. `:kids` = child companion (carries `IsMonitoringTool`, FGS `specialUse`, persistent notification) |
 | Accounts | **Optional.** "Continue without an account" on sign-in. Self-blocking and AI work with no account; an account is needed only to link a child's phone. The child phone has no account (Firebase Anonymous Auth under the hood) |
-| Backend | **Firebase-first**: Auth, Firestore + security rules, App Check, FCM, AI Logic (Gemini). Client SDKs talk to Firebase directly; **Cloud Functions (TypeScript, 2nd gen, Blaze plan) only where security or clean architecture needs them** (6 functions, see §9). Lives in `/firebase` |
+| Backend | **Firebase-first**: Auth, Firestore + security rules, App Check, FCM, AI Logic (Gemini). Client SDKs talk to Firebase directly; **Cloud Functions (TypeScript, 2nd gen, Blaze plan) only where security or clean architecture needs them** (7 functions, see §8). Lives in `/firebase` |
 | Infrastructure | **Only Terraform, applied by GitHub Actions** (state in a GCS bucket), for GitHub (backlog, repo settings, Pages) and GCP/Firebase, in one prod project. See `docs/INFRASTRUCTURE.md` |
 | Backlog | Lives in `backlog/phase1/` as Markdown + front matter and is turned into issues by `infra/github`. Edit the files, not the issues |
 | Open source | GPL-3.0. Forks bring their own `google-services.json`; the app **must build and run without it** (Firebase features disabled) |
@@ -242,6 +242,7 @@ the callable Functions and AI Logic.
 | `deleteAccount` | callable (user) | 3: complete deletion (Play requirement) | M6-06 |
 | `notifyParent` | Firestore trigger | 1: FCM push for unlock requests | M8-05 |
 | `notifyParentAlert` | Firestore trigger | 1: FCM push for lost-permission alerts (unlink is pushed by `unlinkDevice`) | M8-06 |
+| `sendWelcomeEmail` | Firestore trigger (`users/{uid}` created) | 1: needs SES credentials that must never ship in an app. Sends one welcome email to the **Auth account's own address** (never the client-written `email` field); signs in to AWS with its Google identity (no stored key); least-privilege service account (Auth read-only); not retried; no personal data in logs. Infra: `infra/aws`. | none (added outside the backlog) |
 
 **Done without Functions:** parent → child commands (child's foreground-service Firestore listener), child status, usage,
 app list, requests and alerts (direct writes guarded by rules), offline detection (derived from `lastSeen` on the parent),
@@ -250,8 +251,13 @@ AI (Firebase AI Logic from the app).
 **Firestore rules** are the main security boundary for everything done without Functions: see the table in section 7.
 Device docs, link-token claiming and deletes are denied to clients and go through Functions only.
 
-**Every Function** uses the shared secure wrapper from M7-02: App Check enforced, auth and role checked in code,
+**Every callable Function** uses the shared secure wrapper from M7-02: App Check enforced, auth and role checked in code,
 `zod` input validation, per-uid rate limits, its own least-privilege service account, and no personal data in logs.
+**Every event-triggered Function** (`notifyParent`, `notifyParentAlert`, `sendWelcomeEmail`) has no caller to authenticate:
+it is private (no public invoker; only its own Eventarc service account may call it), validates the event data with `zod`,
+relies on the originating write's `firestore.rules`, takes its recipients from trusted sources (the parent's FCM tokens,
+the Auth account's email; never client-written fields), has its own least-privilege service account, is not retried when
+a duplicate would be worse than a miss, and keeps personal data out of errors and logs.
 Deployed only by Terraform (M7-02), never by `firebase deploy`.
 
 ---

@@ -47,3 +47,7 @@ gemini_budget_amount = 5
 
 # Gemini request caps, e.g. [{ metric = "generativelanguage.googleapis.com/generate_content_requests", unit = "/min/project", limit = 60 }].
 gemini_quota_overrides = []
+
+# Amazon SES (infra/aws) sends the welcome email; the function signs in to AWS through Google identity federation.
+aws_account_id = "652693263457"
+aws_region     = "ap-south-1"

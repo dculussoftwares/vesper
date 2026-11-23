@@ -32,3 +32,8 @@ output "enabled_apis" {
   description = "Base APIs enabled on the project."
   value       = sort([for s in google_project_service.base : s.service])
 }
+
+output "welcome_email_service_account_unique_id" {
+  description = "Numeric unique ID of the sendWelcomeEmail runtime service account. infra/aws trusts exactly this identity to assume its SES role (read through the remote state)."
+  value       = google_service_account.function_runtime["sendWelcomeEmail"].unique_id
+}
