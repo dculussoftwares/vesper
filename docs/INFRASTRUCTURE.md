@@ -87,7 +87,11 @@ Then merge: Actions creates everything else. Manual steps that have no API:
      Workers Routes: Edit*, *DNS: Edit* and *Zone: Read* on `dculus.com` only.
    - `CLOUDFLARE_API_TOKEN_READ` (repository secret): the same scopes with *Read* instead of *Edit*.
 4. **Play Console**, once the apps exist: link Play Integrity to both apps, and add the *Play App Signing* SHA-1/SHA-256
-   fingerprints to `infra/gcp/terraform.tfvars`.
+   fingerprints **and the upload key's** to `infra/gcp/terraform.tfvars` (`sha1_fingerprints`, `sha256_fingerprints`).
+   A build whose signing certificate is not listed cannot sign in at all (Google *or* email: the Firebase API key is
+   restricted to the registered certificates). Forks: list your own debug, upload and Play App Signing fingerprints
+   (fingerprints are public). The release workflow runs `scripts/ci/check-google-signin.sh` and fails before building
+   when the upload key is not registered or the Google web client is missing.
 
 If CI ever loses access, a project owner can always fix it from Cloud Shell; nothing depends on a stored credential.
 
