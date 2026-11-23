@@ -11,12 +11,16 @@ export interface WelcomeMessage {
 export interface WelcomeDeps {
   /** Sends one email. Throws when the provider refuses it. */
   send(message: WelcomeMessage): Promise<void>;
+  /**
+   * The email address of the Firebase Auth account `uid`, or undefined when the account is gone or has none. The
+   * recipient always comes from here: the profile document's `email` field is client-written (firestore.rules only
+   * checks its shape), so using it would let a signed-in user make us email any address.
+   */
+  authEmail(uid: string): Promise<string | undefined>;
 }
 
-const profileSchema = z.object({
-  email: z.string().trim().max(254).pipe(z.email()),
-  displayName: z.string().trim().max(100).optional(),
-});
+const emailSchema = z.string().trim().max(254).pipe(z.email());
+const nameSchema = z.string().trim().max(100);
 
 const escapeHtml = (value: string): string =>
   value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
@@ -47,20 +51,23 @@ export function buildWelcomeEmail(email: string, displayName: string | undefined
 
 /**
  * Sends the welcome email for a newly created `users/{uid}` profile (created once, on the first sign-up, by either
- * email or Google sign-in). Returns true when an email was sent. A profile without a usable address is skipped; a
- * provider failure is logged without the address and rethrown so it shows up as a failed invocation.
+ * email or Google sign-in). Returns true when an email was sent. The recipient is the Auth account's own address; an
+ * account without a usable one is skipped. A provider failure is logged without the address and rethrown so it shows
+ * up as a failed invocation.
  */
 export async function handleProfileCreated(
   deps: WelcomeDeps,
+  uid: string,
   data: Record<string, unknown> | undefined,
 ): Promise<boolean> {
-  const parsed = profileSchema.safeParse(data);
-  if (!parsed.success) {
-    logWarn("skipped a profile without a usable email address", { fn: "sendWelcomeEmail", outcome: "no-email" });
+  const email = emailSchema.safeParse(await deps.authEmail(uid));
+  if (!email.success) {
+    logWarn("skipped an account without a usable email address", { fn: "sendWelcomeEmail", outcome: "no-email" });
     return false;
   }
+  const name = nameSchema.safeParse(data?.displayName);
   try {
-    await deps.send(buildWelcomeEmail(parsed.data.email, parsed.data.displayName));
+    await deps.send(buildWelcomeEmail(email.data, name.success ? name.data : undefined));
   } catch (e) {
     logWarn("the welcome email could not be sent", {
       fn: "sendWelcomeEmail",

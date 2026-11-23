@@ -1,9 +1,12 @@
 import { readAwsMailConfig } from "../src/lib/awsMail";
 import { buildWelcomeEmail, handleProfileCreated, type WelcomeDeps, type WelcomeMessage } from "../src/lib/welcomeEmail";
 
-function fakeDeps(fail = false) {
+function fakeDeps(opts: { fail?: boolean; authEmail?: string | undefined } = {}) {
+  const fail = opts.fail ?? false;
+  const authEmail = "authEmail" in opts ? opts.authEmail : "ada@example.com";
   const sent: WelcomeMessage[] = [];
   const deps: WelcomeDeps = {
+    authEmail: () => Promise.resolve(authEmail),
     send: (message) => {
       if (fail) return Promise.reject(new Error("ses down"));
       sent.push(message);
@@ -14,9 +17,9 @@ function fakeDeps(fail = false) {
 }
 
 describe("handleProfileCreated", () => {
-  it("sends one welcome email to the profile's address", async () => {
-    const { deps, sent } = fakeDeps();
-    const result = await handleProfileCreated(deps, { email: "  ada@example.com ", displayName: "Ada" });
+  it("sends one welcome email to the Auth account's address", async () => {
+    const { deps, sent } = fakeDeps({ authEmail: "  ada@example.com " });
+    const result = await handleProfileCreated(deps, "u1", { email: "ignored@example.com", displayName: "Ada" });
     expect(result).toBe(true);
     expect(sent).toHaveLength(1);
     expect(sent[0]?.to).toBe("ada@example.com");
@@ -24,15 +27,28 @@ describe("handleProfileCreated", () => {
     expect(sent[0]?.text).toContain("Hi Ada,");
   });
 
-  it.each([undefined, {}, { email: "" }, { email: "not-an-email" }, { email: 42 }])("skips %j", async (data) => {
-    const { deps, sent } = fakeDeps();
-    expect(await handleProfileCreated(deps, data as never)).toBe(false);
+  it("never sends to the profile's client-written email", async () => {
+    const { deps, sent } = fakeDeps({ authEmail: "me@example.com" });
+    await handleProfileCreated(deps, "u1", { email: "victim@example.com", displayName: "Me" });
+    expect(sent.map((m) => m.to)).toEqual(["me@example.com"]);
+  });
+
+  it.each([undefined, "", "not-an-email"])("skips an account whose Auth email is %j", async (authEmail) => {
+    const { deps, sent } = fakeDeps({ authEmail });
+    expect(await handleProfileCreated(deps, "u1", { email: "a@b.co" })).toBe(false);
     expect(sent).toHaveLength(0);
   });
 
+  it("greets generically when the profile has no usable name", async () => {
+    const { deps, sent } = fakeDeps();
+    await handleProfileCreated(deps, "u1", undefined);
+    await handleProfileCreated(deps, "u1", { displayName: 42 });
+    expect(sent.map((m) => m.text.split("\n")[0])).toEqual(["Hi there,", "Hi there,"]);
+  });
+
   it("rethrows a provider failure so the invocation fails", async () => {
-    const { deps } = fakeDeps(true);
-    await expect(handleProfileCreated(deps, { email: "ada@example.com" })).rejects.toThrow("ses down");
+    const { deps } = fakeDeps({ fail: true });
+    await expect(handleProfileCreated(deps, "u1", {})).rejects.toThrow("ses down");
   });
 });
 

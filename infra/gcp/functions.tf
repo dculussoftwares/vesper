@@ -59,13 +59,13 @@ locals {
       document = "users/{uid}/devices/{deviceId}/alerts/{alertId}"
       roles    = ["roles/datastore.user", local.fcm_send_role]
     }
-    # Welcome email on the first sign-up (email or Google): fires when the app creates the parent's profile. It reads
-    # nothing from Firestore (the event carries the profile) and has no GCP role beyond logging and event delivery;
-    # it signs in to AWS (SES) with its own Google identity, see infra/aws.
+    # Welcome email on the first sign-up (email or Google): fires when the app creates the parent's profile. The
+    # recipient is the Auth account's own address (read-only Auth access), never the client-written profile field.
+    # It signs in to AWS (SES) with its own Google identity, see infra/aws.
     sendWelcomeEmail = {
       kind     = "firestore_created"
       document = "users/{uid}"
-      roles    = []
+      roles    = ["roles/firebaseauth.viewer"]
       env = {
         AWS_ROLE_ARN              = "arn:aws:iam::${var.aws_account_id}:role/vesper-welcome-email-sender"
         AWS_REGION_SES            = var.aws_region

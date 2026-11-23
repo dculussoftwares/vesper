@@ -16,11 +16,9 @@ locals {
   function_sa_unique_id = try(data.terraform_remote_state.gcp.outputs.welcome_email_service_account_unique_id, "pending-gcp-apply")
 }
 
-resource "aws_iam_openid_connect_provider" "google" {
-  url            = "https://accounts.google.com"
-  client_id_list = [var.web_identity_audience]
-}
-
+# AWS's built-in Google web identity principal (no provider resource). For a Google service-account ID token AWS reads
+# the token's `azp` claim as the audience (the account's numeric unique ID) and exposes the requested audience as `oaud`;
+# the three conditions pin the role to exactly that service account asking for exactly this audience.
 resource "aws_iam_role" "welcome_sender" {
   name                 = "vesper-welcome-email-sender"
   description          = "Assumed by the sendWelcomeEmail Cloud Function (Google identity) to send mail through SES"
@@ -30,11 +28,13 @@ resource "aws_iam_role" "welcome_sender" {
     Version = "2012-10-17"
     Statement = [{
       Effect    = "Allow"
-      Principal = { Federated = aws_iam_openid_connect_provider.google.arn }
+      Principal = { Federated = "accounts.google.com" }
       Action    = "sts:AssumeRoleWithWebIdentity"
       Condition = {
         StringEquals = {
-          "accounts.google.com:sub" = local.function_sa_unique_id
+          "accounts.google.com:aud"  = local.function_sa_unique_id
+          "accounts.google.com:oaud" = var.web_identity_audience
+          "accounts.google.com:sub"  = local.function_sa_unique_id
         }
       }
     }]

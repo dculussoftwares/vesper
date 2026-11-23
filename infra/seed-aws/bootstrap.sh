@@ -61,8 +61,9 @@ trust pattern "${GITHUB_SUBJECT_PREFIX}:*" >"$WORK/trust-plan.json"
 ensure_role vesper-tf-plan "$WORK/trust-plan.json" "Terraform plan for infra/aws (read-only)"
 aws iam attach-role-policy --role-name vesper-tf-plan --policy-arn arn:aws:iam::aws:policy/ReadOnlyAccess
 
-# Deploy permissions: SES and budgets, plus IAM only for resources named vesper-* and the Google OIDC provider
-# (the Cloud Function signs in to AWS through it). No AdministratorAccess.
+# Deploy permissions: SES and budgets, plus IAM only for resources named vesper-* (the Cloud Function's sending role).
+# No AdministratorAccess. The two Terraform roles themselves are named vesper-tf-*, which the pattern would match, so an
+# explicit Deny keeps the deploy role from editing itself or the plan role (no way to widen its own permissions).
 cat >"$WORK/deploy-policy.json" <<JSON
 {"Version":"2012-10-17","Statement":[
  {"Sid":"Ses","Effect":"Allow","Action":["ses:*"],"Resource":"*"},
@@ -70,15 +71,14 @@ cat >"$WORK/deploy-policy.json" <<JSON
  {"Sid":"IamRolesAndPolicies","Effect":"Allow","Action":[
    "iam:CreateRole","iam:DeleteRole","iam:GetRole","iam:UpdateRole","iam:UpdateAssumeRolePolicy","iam:TagRole","iam:UntagRole",
    "iam:PutRolePolicy","iam:GetRolePolicy","iam:DeleteRolePolicy","iam:ListRolePolicies","iam:ListAttachedRolePolicies",
-   "iam:ListInstanceProfilesForRole","iam:CreatePolicy","iam:DeletePolicy","iam:GetPolicy","iam:GetPolicyVersion",
-   "iam:CreatePolicyVersion","iam:DeletePolicyVersion","iam:ListPolicyVersions","iam:TagPolicy","iam:UntagPolicy"],
-  "Resource":["arn:aws:iam::${ACCOUNT_ID}:role/vesper-*","arn:aws:iam::${ACCOUNT_ID}:policy/vesper-*"]},
- {"Sid":"IamGoogleOidc","Effect":"Allow","Action":[
-   "iam:CreateOpenIDConnectProvider","iam:DeleteOpenIDConnectProvider","iam:GetOpenIDConnectProvider",
-   "iam:UpdateOpenIDConnectProviderThumbprint","iam:AddClientIDToOpenIDConnectProvider","iam:RemoveClientIDFromOpenIDConnectProvider",
-   "iam:TagOpenIDConnectProvider","iam:UntagOpenIDConnectProvider"],
-  "Resource":"arn:aws:iam::${ACCOUNT_ID}:oidc-provider/accounts.google.com"},
- {"Sid":"IamRead","Effect":"Allow","Action":["iam:ListOpenIDConnectProviders","iam:ListRoles","iam:ListPolicies"],"Resource":"*"}
+   "iam:ListInstanceProfilesForRole"],
+  "Resource":"arn:aws:iam::${ACCOUNT_ID}:role/vesper-*"},
+ {"Sid":"IamRead","Effect":"Allow","Action":["iam:ListRoles"],"Resource":"*"},
+ {"Sid":"NeverTouchTheTerraformRoles","Effect":"Deny","Action":[
+   "iam:UpdateRole","iam:UpdateAssumeRolePolicy","iam:DeleteRole","iam:TagRole","iam:UntagRole","iam:PutRolePolicy",
+   "iam:DeleteRolePolicy","iam:AttachRolePolicy","iam:DetachRolePolicy","iam:PutRolePermissionsBoundary",
+   "iam:DeleteRolePermissionsBoundary"],
+  "Resource":["arn:aws:iam::${ACCOUNT_ID}:role/vesper-tf-*"]}
 ]}
 JSON
 aws iam put-role-policy --role-name vesper-tf-deploy --policy-name vesper-tf-deploy --policy-document "file://$WORK/deploy-policy.json"

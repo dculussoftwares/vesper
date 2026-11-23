@@ -74,7 +74,7 @@ async function credentials(config: AwsMailConfig): Promise<Credentials> {
   return cached;
 }
 
-export function sesWelcomeDeps(env: NodeJS.ProcessEnv = process.env): WelcomeDeps {
+export function sesSender(env: NodeJS.ProcessEnv = process.env): Pick<WelcomeDeps, "send"> {
   return {
     async send(message: WelcomeMessage): Promise<void> {
       const config = readAwsMailConfig(env);
