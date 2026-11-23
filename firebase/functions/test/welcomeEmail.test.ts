@@ -1,5 +1,11 @@
 import { readAwsMailConfig } from "../src/lib/awsMail";
-import { buildWelcomeEmail, handleProfileCreated, type WelcomeDeps, type WelcomeMessage } from "../src/lib/welcomeEmail";
+import {
+  buildWelcomeEmail,
+  handleProfileCreated,
+  profileUid,
+  type WelcomeDeps,
+  type WelcomeMessage,
+} from "../src/lib/welcomeEmail";
 
 function fakeDeps(opts: { fail?: boolean; authEmail?: string | undefined } = {}) {
   const fail = opts.fail ?? false;
@@ -82,4 +88,18 @@ describe("readAwsMailConfig", () => {
   it("names the missing setting", () => {
     expect(() => readAwsMailConfig({ ...env, MAIL_FROM: "" })).toThrow("MAIL_FROM");
   });
+});
+
+describe("profileUid", () => {
+  it("reads the uid of a profile document, with or without the full resource prefix", () => {
+    expect(profileUid("users/abc123")).toBe("abc123");
+    expect(profileUid("projects/p/databases/(default)/documents/users/abc123")).toBe("abc123");
+  });
+
+  it.each([undefined, "", "users", "users/", "users/abc/fcmTokens/tok", "devices/abc", `users/${"x".repeat(129)}`])(
+    "ignores %j",
+    (path) => {
+      expect(profileUid(path)).toBeUndefined();
+    },
+  );
 });
