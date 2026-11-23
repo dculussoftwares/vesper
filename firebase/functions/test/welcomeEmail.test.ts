@@ -96,7 +96,17 @@ describe("profileUid", () => {
     expect(profileUid("projects/p/databases/(default)/documents/users/abc123")).toBe("abc123");
   });
 
-  it.each([undefined, "", "users", "users/", "users/abc/fcmTokens/tok", "devices/abc", `users/${"x".repeat(129)}`])(
+  it.each([
+    undefined,
+    "",
+    "users",
+    "users/",
+    "users/abc/fcmTokens/tok",
+    "devices/abc",
+    "users/documents/users/abc123",
+    "projects/p/databases/(default)/documents/users/abc/fcmTokens/tok",
+    `users/${"x".repeat(129)}`,
+  ])(
     "ignores %j",
     (path) => {
       expect(profileUid(path)).toBeUndefined();

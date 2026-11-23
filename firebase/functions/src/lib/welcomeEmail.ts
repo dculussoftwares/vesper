@@ -20,7 +20,7 @@ export interface WelcomeDeps {
 }
 
 // A parent profile is exactly `users/<uid>`; the path may come with or without the `projects/.../documents/` prefix.
-const PROFILE_PATH = /^(?:.*\/documents\/)?users\/([^/]+)$/;
+const PROFILE_PATH = /^(?:projects\/[^/]+\/databases\/[^/]+\/documents\/)?users\/([^/]+)$/;
 
 /** The uid of the profile document at `documentPath`, or undefined when the path is not a profile (e.g. a sub-collection). */
 export function profileUid(documentPath: string | undefined): string | undefined {
