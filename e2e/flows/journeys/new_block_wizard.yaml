@@ -21,6 +21,12 @@ tags:
 - assertVisible: "Set the rule"
 - assertVisible: "Repeat on"
 - assertVisible: "Summary"
+# Step 3 scrolls and "Turn on block" is its last item, below the fold on the CI emulator. Swipe up from the Summary
+# card: scrollUntilVisible would start in the middle of the screen, which is the "Drag to set" ruler, and change the
+# minutes instead of scrolling.
+- swipe:
+    start: 50%, 90%
+    end: 50%, 35%
 - assertVisible: "Turn on block"
 - tapOn: "Turn on block"
 - assertVisible: "Block is on"
