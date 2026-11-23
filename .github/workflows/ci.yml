@@ -432,6 +432,10 @@ jobs:
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           script: |
+            # CI's debug key is new on every run: a package left in the restored AVD snapshot (signed by an earlier
+            # run's key) would fail the install with INSTALL_FAILED_UPDATE_INCOMPATIBLE.
+            adb uninstall com.dculus.vesper || true
+            adb uninstall com.dculus.vesper.kids || true
             adb install -r app/build/outputs/apk/debug/app-debug.apk
             adb install -r kids/build/outputs/apk/debug/kids-debug.apk
             e2e/scripts/run-flows.sh e2e/flows/smoke

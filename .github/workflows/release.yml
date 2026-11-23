@@ -83,7 +83,7 @@ jobs:
           KEYSTORE_FILE: ${{ runner.temp }}/upload.jks
           KEY_ALIAS: ${{ env.VESPER_KEY_ALIAS }}
           KEYSTORE_PASS: ${{ env.VESPER_KEYSTORE_PASSWORD }}
-        run: scripts/ci/check-google-signin.sh app/google-services.json
+        run: scripts/ci/check-google-signin.sh app/google-services.json kids/google-services.json
 
       - name: Build signed bundles
         run: ./gradlew :app:bundleRelease :kids:bundleRelease -PversionName="${GITHUB_REF_NAME}" --configuration-cache

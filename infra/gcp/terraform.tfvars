@@ -8,7 +8,7 @@ project_id = "vesper-prod-31275"
 #   1. the debug key (local and CI debug builds),
 #   2. the Play upload key (what CI signs the release AAB with; sideloaded/GitHub-release builds),
 #   3. the Play App Signing keys (Play Console > Test and release > App integrity > App signing; what Play installs).
-# Vesper Kids is not on Play yet, so it carries the same keys until it gets its own.
+# Vesper Kids is not on Play yet: it has the debug and upload keys, and gets its Play App Signing keys when published.
 sha1_fingerprints = {
   app = [
     "69:38:3E:14:D2:26:49:38:FB:B2:74:BE:31:64:2F:42:E6:33:B7:A7", # debug
@@ -16,7 +16,10 @@ sha1_fingerprints = {
     "11:0B:74:17:80:DC:20:A4:8A:45:F7:22:8B:F6:C3:F6:9F:06:6E:46", # Play App Signing (classic)
     "A1:60:48:88:B5:B8:17:EC:3C:7D:84:90:5A:59:EE:C1:96:A2:26:26", # Play App Signing (post-quantum)
   ]
-  kids = ["69:38:3E:14:D2:26:49:38:FB:B2:74:BE:31:64:2F:42:E6:33:B7:A7"]
+  kids = [
+    "69:38:3E:14:D2:26:49:38:FB:B2:74:BE:31:64:2F:42:E6:33:B7:A7", # debug
+    "13:E4:C4:54:46:3D:FE:E0:37:E1:18:ED:5A:27:88:E0:FF:C1:07:71", # upload key (the Kids release is signed with it too)
+  ]
 }
 sha256_fingerprints = {
   app = [
@@ -26,7 +29,10 @@ sha256_fingerprints = {
     "6A:86:99:78:DA:74:79:EE:4C:F0:34:35:FC:A6:7A:46:15:49:87:CA:07:B4:BF:D8:86:E4:77:8D:F0:3F:F5:08", # Play App Signing (post-quantum)
     "E1:BD:90:84:BF:C8:FE:A6:38:BF:6E:B6:38:07:3E:7B:83:84:D3:D8:A0:D3:3C:04:03:8F:2F:2E:0A:18:0B:7A", # listed in Play's Digital Asset Links snippet
   ]
-  kids = ["0D:1D:88:64:D6:26:6C:14:AD:D4:7E:64:6D:C4:98:80:3B:17:68:3E:F5:9F:A4:D3:9F:26:E1:1D:92:71:1E:9D"]
+  kids = [
+    "0D:1D:88:64:D6:26:6C:14:AD:D4:7E:64:6D:C4:98:80:3B:17:68:3E:F5:9F:A4:D3:9F:26:E1:1D:92:71:1E:9D", # debug
+    "CF:3F:B7:CD:B3:EE:51:DD:31:B5:74:4C:21:0D:40:C8:4A:D8:76:1A:18:BA:07:AD:CB:9B:A8:93:9A:E3:64:BE", # upload key
+  ]
 }
 
 # On: the debug key was regenerated on 2026-11-05, so its SHA-1 is not held by the deleted StayFocus project.
