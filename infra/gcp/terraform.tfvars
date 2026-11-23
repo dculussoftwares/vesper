@@ -7,7 +7,7 @@ project_id = "vesper-prod-31275"
 # signing certificate is registered here, so every key that can sign an installed build must be listed:
 #   1. the debug key (local and CI debug builds),
 #   2. the Play upload key (what CI signs the release AAB with; sideloaded/GitHub-release builds),
-#   3. the Play App Signing keys (Play Console > Test and release > App integrity > App signing; what Play installs).
+#   3. every Play App Signing key, including "Previous app signing keys" (Play Console > Test and release > App integrity > App signing; what Play installs).
 # Vesper Kids is not on Play yet: it has the debug and upload keys, and gets its Play App Signing keys when published.
 sha1_fingerprints = {
   app = [
@@ -15,6 +15,7 @@ sha1_fingerprints = {
     "13:E4:C4:54:46:3D:FE:E0:37:E1:18:ED:5A:27:88:E0:FF:C1:07:71", # Play upload key
     "11:0B:74:17:80:DC:20:A4:8A:45:F7:22:8B:F6:C3:F6:9F:06:6E:46", # Play App Signing (classic)
     "A1:60:48:88:B5:B8:17:EC:3C:7D:84:90:5A:59:EE:C1:96:A2:26:26", # Play App Signing (post-quantum)
+    "AE:C4:3A:B8:45:1E:1A:C0:7A:52:0D:1D:EE:E0:66:A3:FF:30:3E:35", # Play App Signing (previous key, first used 2026-11-05; SHA-256 is the E1:BD:... below)
   ]
   kids = [
     "69:38:3E:14:D2:26:49:38:FB:B2:74:BE:31:64:2F:42:E6:33:B7:A7", # debug
