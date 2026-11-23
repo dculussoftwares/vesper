@@ -2,7 +2,8 @@ import { getApps, initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { sesSender } from "../lib/awsMail";
-import { handleProfileCreated, type WelcomeDeps } from "../lib/welcomeEmail";
+import { logInfo } from "../lib/log";
+import { handleProfileCreated, profileUid, type WelcomeDeps } from "../lib/welcomeEmail";
 
 /** Amazon SES for sending, Firebase Auth for the recipient (never the client-written profile field). */
 function defaultWelcomeDeps(): WelcomeDeps {
@@ -25,8 +26,18 @@ function defaultWelcomeDeps(): WelcomeDeps {
  * Event trigger: the app created the parent's profile `users/{uid}` (right after the first sign-up, by email or by
  * Google). Sends one welcome email through Amazon SES to the Auth account's own address. Deployed by Terraform with an
  * Eventarc trigger on the same path (infra/gcp/functions.tf); the AWS side is infra/aws. Not retried: a missed welcome
- * email is not worth a duplicate.
+ * email is not worth a duplicate. Only a document at exactly `users/<uid>` counts; anything else is ignored.
  */
 export const sendWelcomeEmail = onDocumentCreated({ document: "users/{uid}", region: "europe-west1" }, async (event) => {
-  await handleProfileCreated(defaultWelcomeDeps(), event.params.uid, event.data?.data());
+  const uid = profileUid(event.document);
+  if (uid === undefined) {
+    // Only the number of path segments is logged (no ids), enough to tell a sub-collection from an odd event.
+    logInfo("ignored a document that is not a parent profile", {
+      fn: "sendWelcomeEmail",
+      outcome: "not-a-profile",
+      code: `segments:${typeof event.document === "string" ? event.document.split("/").length : "none"}`,
+    });
+    return;
+  }
+  await handleProfileCreated(defaultWelcomeDeps(), uid, event.data?.data());
 });
