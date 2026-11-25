@@ -58,12 +58,6 @@ repos:
         language: script
         files: ^infra/
         require_serial: true
-      - id: backlog-waves
-        name: wave table in sync with backlog/
-        entry: python3 scripts/backlog/waves.py --check
-        language: system
-        files: ^backlog/
-        pass_filenames: false
       - id: gradle-pre-push
         name: spotlessCheck + detekt + unit tests
         entry: ./gradlew spotlessCheck detekt testDebugUnitTest --configuration-cache

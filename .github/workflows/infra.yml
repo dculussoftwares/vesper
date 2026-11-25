@@ -16,22 +16,18 @@ on:
   pull_request:
     paths:
       - "infra/**"
-      - "backlog/**"
       - "firebase/firestore.rules"
       - "firebase/functions/**"
       - "scripts/infra/**"
-      - "scripts/backlog/**"
       - ".github/actions/terraform-init/**"
       - ".github/workflows/infra.yml"
   push:
     branches: [main]
     paths:
       - "infra/**"
-      - "backlog/**"
       - "firebase/firestore.rules"
       - "firebase/functions/**"
       - "scripts/infra/**"
-      - "scripts/backlog/**"
       - ".github/actions/terraform-init/**"
       - ".github/workflows/infra.yml"
   workflow_dispatch:
