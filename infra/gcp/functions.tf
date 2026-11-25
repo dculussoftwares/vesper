@@ -179,6 +179,10 @@ resource "google_cloudfunctions2_function" "function" {
     entry_point     = each.key
     service_account = google_service_account.functions_build.id
 
+    # The platform builds event triggers with the legacy "event" signature, which hands the handler the raw protobuf
+    # body instead of a CloudEvent (no document path, no params). Firebase's SDK needs "cloudevent".
+    environment_variables = each.value.kind == "callable" ? {} : { GOOGLE_FUNCTION_SIGNATURE_TYPE = "cloudevent" }
+
     source {
       storage_source {
         bucket = google_storage_bucket.functions_source.name
