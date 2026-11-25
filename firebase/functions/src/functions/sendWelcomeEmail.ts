@@ -3,23 +3,28 @@ import { getAuth } from "firebase-admin/auth";
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { sesSender } from "../lib/awsMail";
 import { logInfo } from "../lib/log";
-import { handleProfileCreated, profileUid, type WelcomeDeps } from "../lib/welcomeEmail";
+import {
+    eventProfileUid,
+    handleProfileCreated,
+    type WelcomeDeps,
+} from "../lib/welcomeEmail";
 
 /** Amazon SES for sending, Firebase Auth for the recipient (never the client-written profile field). */
 function defaultWelcomeDeps(): WelcomeDeps {
-  if (getApps().length === 0) initializeApp();
-  return {
-    ...sesSender(),
-    authEmail: async (uid) => {
-      try {
-        return (await getAuth().getUser(uid)).email;
-      } catch (e) {
-        // Deleted between sign-up and now: nobody to welcome.
-        if ((e as { code?: string }).code === "auth/user-not-found") return undefined;
-        throw e;
-      }
-    },
-  };
+    if (getApps().length === 0) initializeApp();
+    return {
+        ...sesSender(),
+        authEmail: async (uid) => {
+            try {
+                return (await getAuth().getUser(uid)).email;
+            } catch (e) {
+                // Deleted between sign-up and now: nobody to welcome.
+                if ((e as { code?: string }).code === "auth/user-not-found")
+                    return undefined;
+                throw e;
+            }
+        },
+    };
 }
 
 /**
@@ -28,16 +33,23 @@ function defaultWelcomeDeps(): WelcomeDeps {
  * Eventarc trigger on the same path (infra/gcp/functions.tf); the AWS side is infra/aws. Not retried: a missed welcome
  * email is not worth a duplicate. Only a document at exactly `users/<uid>` counts; anything else is ignored.
  */
-export const sendWelcomeEmail = onDocumentCreated({ document: "users/{uid}", region: "europe-west1" }, async (event) => {
-  const uid = profileUid(event.document);
-  if (uid === undefined) {
-    // Only the number of path segments is logged (no ids), enough to tell a sub-collection from an odd event.
-    logInfo("ignored a document that is not a parent profile", {
-      fn: "sendWelcomeEmail",
-      outcome: "not-a-profile",
-      code: `segments:${typeof event.document === "string" ? event.document.split("/").length : "none"}`,
-    });
-    return;
-  }
-  await handleProfileCreated(defaultWelcomeDeps(), uid, event.data?.data());
-});
+export const sendWelcomeEmail = onDocumentCreated(
+    { document: "users/{uid}", region: "europe-west1" },
+    async (event) => {
+        const uid = eventProfileUid(event);
+        if (uid === undefined) {
+            // Only attribute names are logged (no ids), enough to see which fields Eventarc filled in.
+            logInfo("ignored a document that is not a parent profile", {
+                fn: "sendWelcomeEmail",
+                outcome: "not-a-profile",
+                code: `keys:${Object.keys(event).sort().join(",")}`,
+            });
+            return;
+        }
+        await handleProfileCreated(
+            defaultWelcomeDeps(),
+            uid,
+            event.data?.data(),
+        );
+    },
+);
