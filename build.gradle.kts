@@ -10,6 +10,8 @@ buildscript {
             }
             // FreeMarker 2.3.32 comes in through the Kover plugin (fixed in 2.3.35).
             classpath("org.freemarker:freemarker:2.3.35") { because("fixes GHSA-27j2-h3m2-8237") }
+            // Guava up to 33.7.1 has GHSA-xxph-c9ww-hj94 (fixed in 33.7.2).
+            classpath("com.google.guava:guava:33.7.2-jre") { because("fixes GHSA-xxph-c9ww-hj94") }
         }
     }
 }
@@ -266,6 +268,19 @@ subprojects {
             if (requested.group == "org.bouncycastle" && requested.name.endsWith("-jdk18on")) {
                 useVersion("1.85")
                 because("fixes GHSA-9pwp-9qqc-pr26, GHSA-qp49-qgx5-5m26")
+            }
+        }
+    }
+}
+
+// Guava up to 33.7.1 has GHSA-xxph-c9ww-hj94; some libraries still bring 32.x. Keep each flavour (-android / -jre) and move to 33.7.2.
+subprojects {
+    configurations.configureEach {
+        resolutionStrategy.eachDependency {
+            if (requested.group == "com.google.guava" && requested.name == "guava") {
+                val flavour = if (requested.version.orEmpty().endsWith("-android")) "android" else "jre"
+                useVersion("33.7.2-$flavour")
+                because("fixes GHSA-xxph-c9ww-hj94")
             }
         }
     }
