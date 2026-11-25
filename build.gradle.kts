@@ -1,5 +1,5 @@
 // Bouncy Castle arrives through the Android Gradle plugin; 1.80.2 has GHSA-9pwp-9qqc-pr26 and GHSA-qp49-qgx5-5m26.
-// Remove once AGP ships 1.85 or newer.
+// Remove once AGP ships 1.85 or newer. The same pin is needed for the lint tool classpath below.
 buildscript {
     dependencies {
         constraints {
@@ -255,4 +255,16 @@ val checkFeatureIsolation =
 
 tasks.named("check") {
     dependsOn(checkFeatureIsolation)
+}
+
+// Android lint's own tool classpath also pulls in Bouncy Castle 1.80.2 (same advisories as the buildscript pin above).
+subprojects {
+    configurations.matching { it.name == "androidLintTool" }.configureEach {
+        resolutionStrategy.eachDependency {
+            if (requested.group == "org.bouncycastle" && requested.name.endsWith("-jdk18on")) {
+                useVersion("1.85")
+                because("fixes GHSA-9pwp-9qqc-pr26, GHSA-qp49-qgx5-5m26")
+            }
+        }
+    }
 }
