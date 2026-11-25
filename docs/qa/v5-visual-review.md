@@ -45,7 +45,7 @@ renders; sample data differ (the render uses fixture data, e.g. `HomeTypicalDay`
 | 24 | `24-allow-parent.png` | `kids/src/test/screenshots/KidsAllowParent.png` | no | Accepted. |
 
 Nothing was fixed in code in this PR: every difference seen is a documented extra, fixture data or the missing baseline
-(F1). Follow-ups F1 and F2 are listed in the PR body; they are to be added to `backlog/phase1/` by a maintainer.
+(F1). Follow-ups F1 and F2 are listed in the PR body.
 
 ## 2. Contrast report (V5_SPEC section 8, question 3)
 

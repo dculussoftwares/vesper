@@ -90,7 +90,7 @@ terraform output -raw prod_env > ../prod.env                                # co
 Then merge: Actions creates everything else. Manual steps that have no API:
 
 1. **GitHub App** (org-owned, installed on this repo only): *Repository → Administration, Issues, Pages: read and write*,
-   *Metadata: read*, *Organization → Projects: read and write*. Set `BACKLOG_APP_CLIENT_ID` and `BACKLOG_APP_PRIVATE_KEY`.
+   *Metadata: read*. Set `BACKLOG_APP_CLIENT_ID` and `BACKLOG_APP_PRIVATE_KEY`.
 2. **Google sign-in:** ordinary OAuth clients have no create API, so create a *Web application* client once in
    *Google Auth Platform → Clients* of the project, then set `GOOGLE_OAUTH_WEB_CLIENT_ID` (variable) and
    `GOOGLE_OAUTH_WEB_CLIENT_SECRET` (secret). Add the redirect URI `https://<project_id>.firebaseapp.com/__/auth/handler`.

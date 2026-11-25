@@ -233,7 +233,7 @@ the callable Functions and AI Logic.
 | `deleteAccount` | callable (user) | 3: complete deletion (Play requirement) | M6-06 |
 | `notifyParent` | Firestore trigger | 1: FCM push for unlock requests | M8-05 |
 | `notifyParentAlert` | Firestore trigger | 1: FCM push for lost-permission alerts (unlink is pushed by `unlinkDevice`) | M8-06 |
-| `sendWelcomeEmail` | Firestore trigger (`users/{uid}` created) | 1: needs SES credentials that must never ship in an app. Sends one welcome email to the **Auth account's own address** (never the client-written `email` field); signs in to AWS with its Google identity (no stored key); least-privilege service account (Auth read-only); not retried; no personal data in logs. Infra: `infra/aws`. | none (added outside the backlog) |
+| `sendWelcomeEmail` | Firestore trigger (`users/{uid}` created) | 1: needs SES credentials that must never ship in an app. Sends one welcome email to the **Auth account's own address** (never the client-written `email` field); signs in to AWS with its Google identity (no stored key); least-privilege service account (Auth read-only); not retried; no personal data in logs. Infra: `infra/aws`. | none |
 
 **Done without Functions:** parent → child commands (child's foreground-service Firestore listener), child status, usage,
 app list, requests and alerts (direct writes guarded by rules), offline detection (derived from `lastSeen` on the parent),
