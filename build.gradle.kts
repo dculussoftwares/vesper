@@ -12,6 +12,11 @@ buildscript {
             classpath("org.freemarker:freemarker:2.3.35") { because("fixes GHSA-27j2-h3m2-8237") }
             // Guava up to 33.7.1 has GHSA-xxph-c9ww-hj94 (fixed in 33.7.2).
             classpath("com.google.guava:guava:33.7.2-jre") { because("fixes GHSA-xxph-c9ww-hj94") }
+            // Other transitive build-tool dependencies with advisories (jose4j and jdom2 are high; the rest medium).
+            classpath("org.bitbucket.b_c:jose4j:0.9.6") { because("fixes GHSA-3677-xxcr-wjqv") }
+            classpath("org.jdom:jdom2:2.0.6.1") { because("fixes GHSA-2363-cqg2-863c") }
+            classpath("org.apache.commons:commons-lang3:3.18.0") { because("fixes GHSA-j288-q9x7-2f5v") }
+            classpath("org.apache.httpcomponents:httpclient:4.5.14") { because("fixes GHSA-7r82-7xv7-xcpj") }
         }
     }
 }
@@ -281,6 +286,25 @@ subprojects {
                 val flavour = if (requested.version.orEmpty().endsWith("-android")) "android" else "jre"
                 useVersion("33.7.2-$flavour")
                 because("fixes GHSA-xxph-c9ww-hj94")
+            }
+        }
+    }
+}
+
+// The same transitive pins for every module's own configurations (see the buildscript block at the top).
+subprojects {
+    configurations.configureEach {
+        resolutionStrategy.eachDependency {
+            val pinned =
+                mapOf(
+                    "org.bitbucket.b_c:jose4j" to "0.9.6",
+                    "org.jdom:jdom2" to "2.0.6.1",
+                    "org.apache.commons:commons-lang3" to "3.18.0",
+                    "org.apache.httpcomponents:httpclient" to "4.5.14",
+                )["${requested.group}:${requested.name}"]
+            if (pinned != null) {
+                useVersion(pinned)
+                because("fixes a published advisory (high or medium)")
             }
         }
     }
