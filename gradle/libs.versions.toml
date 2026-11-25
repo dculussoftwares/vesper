@@ -35,6 +35,14 @@ googleid = "1.2.1"
 camerax = "1.5.3"
 mlkitBarcode = "18.3.1"
 zxing = "3.5.3"
+# Security pins for transitive build and test dependencies (see build.gradle.kts). Not used by any library alias.
+bouncycastle = "1.85"
+freemarker = "2.3.35"
+guava = "33.7.2"
+jose4j = "0.9.6"
+jdom2 = "2.0.6.1"
+commonsLang3 = "3.18.0"
+httpclient = "4.5.14"
 
 [libraries]
 # Build-logic only

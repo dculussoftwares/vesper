@@ -3,7 +3,7 @@ package com.dculus.vesper.kids
 import com.dculus.vesper.core.sync.LinkTokens
 import com.google.zxing.BinaryBitmap
 import com.google.zxing.RGBLuminanceSource
-import com.google.zxing.common.HybridBinarizer
+import com.google.zxing.common.GlobalHistogramBinarizer
 import com.google.zxing.qrcode.QRCodeReader
 import org.junit.Test
 import kotlin.test.assertEquals
@@ -14,7 +14,7 @@ class QrCodesTest {
 
     private fun decode(qr: QrPixels): String {
         val source = RGBLuminanceSource(qr.size, qr.size, qr.argb)
-        return QRCodeReader().decode(BinaryBitmap(HybridBinarizer(source))).text
+        return QRCodeReader().decode(BinaryBitmap(GlobalHistogramBinarizer(source))).text
     }
 
     @Test

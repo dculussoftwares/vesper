@@ -1,3 +1,38 @@
+// Transitive build-tool dependencies with published advisories are pinned to patched versions (all versions live in
+// gradle/libs.versions.toml). The version-catalog accessor is not available in this block, so it reads the file directly.
+// Bouncy Castle (Android Gradle plugin), FreeMarker (Kover), Guava, jose4j, jdom2, commons-lang3, httpclient.
+// Remove each pin once the tool that pulls it in ships a fixed version.
+buildscript {
+    val catalog = file("gradle/libs.versions.toml").readLines()
+
+    fun catalogVersion(key: String): String =
+        catalog
+            .first { it.startsWith("$key = ") }
+            .substringAfter('"')
+            .substringBefore('"')
+    dependencies {
+        constraints {
+            listOf("bcprov", "bcpkix", "bcutil").forEach {
+                classpath("org.bouncycastle:$it-jdk18on:${catalogVersion("bouncycastle")}") {
+                    because("fixes GHSA-9pwp-9qqc-pr26, GHSA-qp49-qgx5-5m26")
+                }
+            }
+            classpath(
+                "org.freemarker:freemarker:${catalogVersion("freemarker")}",
+            ) { because("fixes GHSA-27j2-h3m2-8237") }
+            classpath("com.google.guava:guava:${catalogVersion("guava")}-jre") { because("fixes GHSA-xxph-c9ww-hj94") }
+            classpath("org.bitbucket.b_c:jose4j:${catalogVersion("jose4j")}") { because("fixes GHSA-3677-xxcr-wjqv") }
+            classpath("org.jdom:jdom2:${catalogVersion("jdom2")}") { because("fixes GHSA-2363-cqg2-863c") }
+            classpath(
+                "org.apache.commons:commons-lang3:${catalogVersion("commonsLang3")}",
+            ) { because("fixes GHSA-j288-q9x7-2f5v") }
+            classpath("org.apache.httpcomponents:httpclient:${catalogVersion("httpclient")}") {
+                because("fixes GHSA-7r82-7xv7-xcpj")
+            }
+        }
+    }
+}
+
 // Plugins are declared here (not applied) so every module shares one plugin classpath.
 plugins {
     id("vesper.manifest-audit")
@@ -241,4 +276,39 @@ val checkFeatureIsolation =
 
 tasks.named("check") {
     dependsOn(checkFeatureIsolation)
+}
+
+// The same security pins for every module's own configurations (the buildscript block at the top covers the build classpath).
+// Android lint's tool classpath brings Bouncy Castle 1.80.2; some libraries still bring Guava 32.x (keep the -android / -jre flavour).
+val bouncycastle = libs.versions.bouncycastle.get()
+val guava = libs.versions.guava.get()
+val pins =
+    mapOf(
+        "org.bitbucket.b_c:jose4j" to libs.versions.jose4j.get(),
+        "org.jdom:jdom2" to libs.versions.jdom2.get(),
+        "org.apache.commons:commons-lang3" to libs.versions.commonsLang3.get(),
+        "org.apache.httpcomponents:httpclient" to libs.versions.httpclient.get(),
+    )
+subprojects {
+    configurations.configureEach {
+        resolutionStrategy.eachDependency {
+            val module = "${requested.group}:${requested.name}"
+            when {
+                requested.group == "org.bouncycastle" && requested.name.endsWith("-jdk18on") -> {
+                    useVersion(bouncycastle)
+                    because("fixes GHSA-9pwp-9qqc-pr26, GHSA-qp49-qgx5-5m26")
+                }
+
+                module == "com.google.guava:guava" -> {
+                    useVersion("$guava-${if (requested.version.orEmpty().endsWith("-android")) "android" else "jre"}")
+                    because("fixes GHSA-xxph-c9ww-hj94")
+                }
+
+                module in pins -> {
+                    useVersion(pins.getValue(module))
+                    because("fixes a published advisory (high or medium)")
+                }
+            }
+        }
+    }
 }
