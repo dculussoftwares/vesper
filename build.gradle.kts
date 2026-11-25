@@ -8,6 +8,8 @@ buildscript {
                     "org.bouncycastle:$it-jdk18on:1.85",
                 ) { because("fixes GHSA-9pwp-9qqc-pr26, GHSA-qp49-qgx5-5m26") }
             }
+            // FreeMarker 2.3.32 comes in through the Kover plugin (fixed in 2.3.35).
+            classpath("org.freemarker:freemarker:2.3.35") { because("fixes GHSA-27j2-h3m2-8237") }
         }
     }
 }
