@@ -1,22 +1,34 @@
-// Bouncy Castle arrives through the Android Gradle plugin; 1.80.2 has GHSA-9pwp-9qqc-pr26 and GHSA-qp49-qgx5-5m26.
-// Remove once AGP ships 1.85 or newer. The same pin is needed for the lint tool classpath below.
+// Transitive build-tool dependencies with published advisories are pinned to patched versions (all versions live in
+// gradle/libs.versions.toml). The version-catalog accessor is not available in this block, so it reads the file directly.
+// Bouncy Castle (Android Gradle plugin), FreeMarker (Kover), Guava, jose4j, jdom2, commons-lang3, httpclient.
+// Remove each pin once the tool that pulls it in ships a fixed version.
 buildscript {
+    val catalog = file("gradle/libs.versions.toml").readLines()
+
+    fun catalogVersion(key: String): String =
+        catalog
+            .first { it.startsWith("$key = ") }
+            .substringAfter('"')
+            .substringBefore('"')
     dependencies {
         constraints {
             listOf("bcprov", "bcpkix", "bcutil").forEach {
-                classpath(
-                    "org.bouncycastle:$it-jdk18on:1.85",
-                ) { because("fixes GHSA-9pwp-9qqc-pr26, GHSA-qp49-qgx5-5m26") }
+                classpath("org.bouncycastle:$it-jdk18on:${catalogVersion("bouncycastle")}") {
+                    because("fixes GHSA-9pwp-9qqc-pr26, GHSA-qp49-qgx5-5m26")
+                }
             }
-            // FreeMarker 2.3.32 comes in through the Kover plugin (fixed in 2.3.35).
-            classpath("org.freemarker:freemarker:2.3.35") { because("fixes GHSA-27j2-h3m2-8237") }
-            // Guava up to 33.7.1 has GHSA-xxph-c9ww-hj94 (fixed in 33.7.2).
-            classpath("com.google.guava:guava:33.7.2-jre") { because("fixes GHSA-xxph-c9ww-hj94") }
-            // Other transitive build-tool dependencies with advisories (jose4j and jdom2 are high; the rest medium).
-            classpath("org.bitbucket.b_c:jose4j:0.9.6") { because("fixes GHSA-3677-xxcr-wjqv") }
-            classpath("org.jdom:jdom2:2.0.6.1") { because("fixes GHSA-2363-cqg2-863c") }
-            classpath("org.apache.commons:commons-lang3:3.18.0") { because("fixes GHSA-j288-q9x7-2f5v") }
-            classpath("org.apache.httpcomponents:httpclient:4.5.14") { because("fixes GHSA-7r82-7xv7-xcpj") }
+            classpath(
+                "org.freemarker:freemarker:${catalogVersion("freemarker")}",
+            ) { because("fixes GHSA-27j2-h3m2-8237") }
+            classpath("com.google.guava:guava:${catalogVersion("guava")}-jre") { because("fixes GHSA-xxph-c9ww-hj94") }
+            classpath("org.bitbucket.b_c:jose4j:${catalogVersion("jose4j")}") { because("fixes GHSA-3677-xxcr-wjqv") }
+            classpath("org.jdom:jdom2:${catalogVersion("jdom2")}") { because("fixes GHSA-2363-cqg2-863c") }
+            classpath(
+                "org.apache.commons:commons-lang3:${catalogVersion("commonsLang3")}",
+            ) { because("fixes GHSA-j288-q9x7-2f5v") }
+            classpath("org.apache.httpcomponents:httpclient:${catalogVersion("httpclient")}") {
+                because("fixes GHSA-7r82-7xv7-xcpj")
+            }
         }
     }
 }
@@ -266,45 +278,36 @@ tasks.named("check") {
     dependsOn(checkFeatureIsolation)
 }
 
-// Android lint's own tool classpath also pulls in Bouncy Castle 1.80.2 (same advisories as the buildscript pin above).
-subprojects {
-    configurations.matching { it.name == "androidLintTool" }.configureEach {
-        resolutionStrategy.eachDependency {
-            if (requested.group == "org.bouncycastle" && requested.name.endsWith("-jdk18on")) {
-                useVersion("1.85")
-                because("fixes GHSA-9pwp-9qqc-pr26, GHSA-qp49-qgx5-5m26")
-            }
-        }
-    }
-}
-
-// Guava up to 33.7.1 has GHSA-xxph-c9ww-hj94; some libraries still bring 32.x. Keep each flavour (-android / -jre) and move to 33.7.2.
+// The same security pins for every module's own configurations (the buildscript block at the top covers the build classpath).
+// Android lint's tool classpath brings Bouncy Castle 1.80.2; some libraries still bring Guava 32.x (keep the -android / -jre flavour).
+val bouncycastle = libs.versions.bouncycastle.get()
+val guava = libs.versions.guava.get()
+val pins =
+    mapOf(
+        "org.bitbucket.b_c:jose4j" to libs.versions.jose4j.get(),
+        "org.jdom:jdom2" to libs.versions.jdom2.get(),
+        "org.apache.commons:commons-lang3" to libs.versions.commonsLang3.get(),
+        "org.apache.httpcomponents:httpclient" to libs.versions.httpclient.get(),
+    )
 subprojects {
     configurations.configureEach {
         resolutionStrategy.eachDependency {
-            if (requested.group == "com.google.guava" && requested.name == "guava") {
-                val flavour = if (requested.version.orEmpty().endsWith("-android")) "android" else "jre"
-                useVersion("33.7.2-$flavour")
-                because("fixes GHSA-xxph-c9ww-hj94")
-            }
-        }
-    }
-}
+            val module = "${requested.group}:${requested.name}"
+            when {
+                requested.group == "org.bouncycastle" && requested.name.endsWith("-jdk18on") -> {
+                    useVersion(bouncycastle)
+                    because("fixes GHSA-9pwp-9qqc-pr26, GHSA-qp49-qgx5-5m26")
+                }
 
-// The same transitive pins for every module's own configurations (see the buildscript block at the top).
-subprojects {
-    configurations.configureEach {
-        resolutionStrategy.eachDependency {
-            val pinned =
-                mapOf(
-                    "org.bitbucket.b_c:jose4j" to "0.9.6",
-                    "org.jdom:jdom2" to "2.0.6.1",
-                    "org.apache.commons:commons-lang3" to "3.18.0",
-                    "org.apache.httpcomponents:httpclient" to "4.5.14",
-                )["${requested.group}:${requested.name}"]
-            if (pinned != null) {
-                useVersion(pinned)
-                because("fixes a published advisory (high or medium)")
+                module == "com.google.guava:guava" -> {
+                    useVersion("$guava-${if (requested.version.orEmpty().endsWith("-android")) "android" else "jre"}")
+                    because("fixes GHSA-xxph-c9ww-hj94")
+                }
+
+                module in pins -> {
+                    useVersion(pins.getValue(module))
+                    because("fixes a published advisory (high or medium)")
+                }
             }
         }
     }
