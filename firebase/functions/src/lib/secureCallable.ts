@@ -1,4 +1,3 @@
-import { getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore, type Firestore } from "firebase-admin/firestore";
 import {
   HttpsError,
@@ -8,6 +7,7 @@ import {
   type CallableRequest,
 } from "firebase-functions/v2/https";
 import { z } from "zod";
+import { ensureDefaultApp } from "./adminApp";
 import { logError, logWarn } from "./log";
 import { consumeRateLimit, type RateLimit } from "./rateLimit";
 
@@ -52,7 +52,7 @@ export interface SecureDeps {
 
 /** Initializes the default Admin app on first use (credentials come from the function's runtime service account). */
 export function defaultDb(): Firestore {
-  if (getApps().length === 0) initializeApp();
+  ensureDefaultApp();
   return getFirestore();
 }
 
