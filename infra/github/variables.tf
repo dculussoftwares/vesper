@@ -23,7 +23,7 @@ variable "repository_topics" {
 }
 
 variable "required_approvals" {
-  description = "Approving reviews required on main. Must stay 0: Qodo (the fallback reviewer) cannot approve, so a required approval would block fallback merges. The CodeRabbit/Qodo gate is enforced by docs/agents/PHASE1_EXECUTION.md."
+  description = "Approving reviews required on main. Must stay 0: Qodo (the fallback reviewer) cannot approve, so a required approval would block fallback merges. The CodeRabbit/Qodo gate is enforced by the agent rules in AGENTS.md."
   type        = number
   default     = 0
 }
