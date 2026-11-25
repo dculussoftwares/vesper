@@ -1,3 +1,17 @@
+// Bouncy Castle arrives through the Android Gradle plugin; 1.80.2 has GHSA-9pwp-9qqc-pr26 and GHSA-qp49-qgx5-5m26.
+// Remove once AGP ships 1.85 or newer.
+buildscript {
+    dependencies {
+        constraints {
+            listOf("bcprov", "bcpkix", "bcutil").forEach {
+                classpath(
+                    "org.bouncycastle:$it-jdk18on:1.85",
+                ) { because("fixes GHSA-9pwp-9qqc-pr26, GHSA-qp49-qgx5-5m26") }
+            }
+        }
+    }
+}
+
 // Plugins are declared here (not applied) so every module shares one plugin classpath.
 plugins {
     id("vesper.manifest-audit")
