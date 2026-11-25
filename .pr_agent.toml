@@ -1,4 +1,4 @@
-# Qodo: fallback reviewer when CodeRabbit is rate limited (docs/agents/PHASE1_EXECUTION.md).
+# Qodo: fallback reviewer when CodeRabbit is rate limited.
 [github_app]
 pr_commands = [
     "/agentic_describe",

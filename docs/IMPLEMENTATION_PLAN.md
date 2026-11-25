@@ -4,11 +4,8 @@ This is the engineering plan for Phase 1 (v1.0). Product scope, screens and desi
 [`docs/design/V5_SPEC.md`](design/V5_SPEC.md) (source of truth: `design/Stay Focused v5.dc.html`). Read that first.
 `design_handoff_stay_focused_phase1/` is the v2 handoff, kept as history only (the v2 design system has been removed).
 
-The work is tracked as **10 epics (one per milestone) with stories as sub-issues** on the
-**GitHub Project kanban board** ([org project #11](https://github.com/orgs/dculussoftwares/projects/11)) for `dculussoftwares/vesper`. Every story is meant to be
-picked up and finished by one coding agent or developer in **one pull request, reviewed by CodeRabbit**. This document is the shared
-contract all stories refer to. Agent prompts and the parallel execution order are in
-[`docs/agents/PHASE1_EXECUTION.md`](agents/PHASE1_EXECUTION.md).
+Work is tracked as plain GitHub issues and PRs. Every change is meant to be picked up and finished in **one pull request,
+reviewed by CodeRabbit**. This document is the shared contract all changes refer to.
 
 ---
 
@@ -27,8 +24,7 @@ contract all stories refer to. Agent prompts and the parallel execution order ar
 | Two apps | `:app` = self-control + parent. `:kids` = child companion (carries `IsMonitoringTool`, FGS `specialUse`, persistent notification) |
 | Accounts | **Optional.** "Continue without an account" on sign-in. Self-blocking and AI work with no account; an account is needed only to link a child's phone. The child phone has no account (Firebase Anonymous Auth under the hood) |
 | Backend | **Firebase-first**: Auth, Firestore + security rules, App Check, FCM, AI Logic (Gemini). Client SDKs talk to Firebase directly; **Cloud Functions (TypeScript, 2nd gen, Blaze plan) only where security or clean architecture needs them** (7 functions, see §8). Lives in `/firebase` |
-| Infrastructure | **Only Terraform, applied by GitHub Actions** (state in a GCS bucket), for GitHub (backlog, repo settings, Pages) and GCP/Firebase, in one prod project. See `docs/INFRASTRUCTURE.md` |
-| Backlog | Lives in `backlog/phase1/` as Markdown + front matter and is turned into issues by `infra/github`. Edit the files, not the issues |
+| Infrastructure | **Only Terraform, applied by GitHub Actions** (state in a GCS bucket), for GitHub (repo settings, Pages) and GCP/Firebase, in one prod project. See `docs/INFRASTRUCTURE.md` |
 | Open source | GPL-3.0. Forks bring their own `google-services.json`; the app **must build and run without it** (Firebase features disabled) |
 | Fonts | Plus Jakarta Sans (SIL OFL 1.1), bundled as a variable font; see `docs/FONTS.md` |
 | "Use, then rest" | The *use* window counts **foreground time only**. When used up, the app locks for *rest* minutes; the next open after that starts a new window |
@@ -56,10 +52,9 @@ contract all stories refer to. Agent prompts and the parallel execution order ar
 :feature:account           Account, permission health, delete account
 /firebase                  firestore.rules, Cloud Functions (TS), emulator tests (deployed by Terraform, never the Firebase CLI)
 /web                       Website (Astro + React): privacy policy, account deletion; vesper.dculus.com on Cloudflare
-/infra/github              Terraform: labels, milestones, backlog issues, repo settings
+/infra/github              Terraform: repo settings, ruleset, Pages
 /infra/seed                Terraform: the GCP project, state bucket, keyless GitHub login, CI identities
 /infra/gcp                 Terraform: Firebase/GCP resources inside the project
-/backlog/phase1            Epics and stories (source of truth for the GitHub issues)
 ```
 
 `:core:model` is an addition to the handoff's layout. It keeps domain types free of Android so the rule
@@ -93,25 +88,21 @@ M1 ──┬── M2 ───────────────────�
 
 ---
 
-## 4. Story workflow (for agents and humans)
+## 4. Change workflow (for agents and humans)
 
-1. **Pick** a card in the board's `Ready` column (`python3 scripts/backlog/board.py ready`). Ready means every
-   "Depends on" issue is closed. Assign yourself and move it: `python3 scripts/backlog/board.py status <N> "In progress"`.
-2. **Branch** from `main`: `m<N>/<issue-number>-<short-slug>` (e.g. `m1/27-room-schema`).
-3. **Read** the story's *Design reference*: `docs/design/V5_SPEC.md` and the prototype (open
+1. **Branch** from `origin/main` (add an issue number to the name when there is one).
+2. **Read** the design reference: `docs/design/V5_SPEC.md` and the prototype (open
    `design/Stay Focused v5.dc.html` in Chrome; renders are in `design/screens-v5/`).
    Prototype logic (AI prompt, summary sentences) is in the `<script>` block of that file.
-4. **Build** only what the story's *Scope* says. List anything else as a follow-up (a new story file in `backlog/phase1/`).
-5. **Verify** locally with the *Definition of done* below, plus the story's acceptance criteria.
-6. **Open a PR** titled `[M<N>-<nn>] <story title>` with `Closes #<issue>`, what changed, how it was tested, the acceptance
-   criteria ticked, and pending manual checks. Move the card to `In review`.
-7. **CodeRabbit reviews the PR** (config: `.coderabbit.yaml`). Fix or answer **every** comment and resolve the threads.
+3. **Build** only what the change needs. List anything else as a follow-up issue.
+4. **Verify** locally with the *Definition of done* below.
+5. **Open a PR** with `Closes #<issue>` when there is one: what changed, how it was tested, pending manual checks.
+6. **CodeRabbit reviews the PR** (config: `.coderabbit.yaml`). Fix or answer **every** comment and resolve the threads.
    Never self-approve (`@coderabbitai approve`) or dismiss its review. If CodeRabbit is rate limited, the fallback reviewer
-   is **Qodo** (`.pr_agent.toml`; `/agentic_review`), see `docs/agents/PHASE1_EXECUTION.md`.
-8. **Merge** (squash) only when the merge gate is met (CI green, `CodeRabbit` check done, 0 unresolved threads, CodeRabbit approved, or the Qodo fallback gate is met, or no new actionable comments on HEAD; see `docs/agents/PHASE1_EXECUTION.md`). The merge closes
-   the issue, and the board moves the card to `Done` and promotes newly unblocked cards to `Ready`.
+   is **Qodo** (`.pr_agent.toml`; `/agentic_review`).
+7. **Merge** (squash) when CI is green, 0 threads are unresolved and every Qodo/Greptile/CodeRabbit finding is fixed or answered.
 
-### Definition of done (every story)
+### Definition of done (every change)
 
 - `./gradlew ciCheck` passes locally (before M1-02 lands: `./gradlew assembleDebug`), and every CI job behind `ci-pass` is green
   on the PR. Once M1-14 has landed, the pre-commit hooks must also pass (`pre-commit run --all-files`).
