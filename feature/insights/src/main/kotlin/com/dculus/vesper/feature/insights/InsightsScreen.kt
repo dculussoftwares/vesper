@@ -41,6 +41,7 @@ import com.dculus.vesper.core.ui.charts.SmoothAreaChart
 import com.dculus.vesper.core.ui.charts.UsageRow
 import com.dculus.vesper.core.ui.components.AppIconTile
 import com.dculus.vesper.core.ui.components.GlowCard
+import com.dculus.vesper.core.ui.components.LoadingSpinner
 import com.dculus.vesper.core.ui.components.LocalTabBarPadding
 import com.dculus.vesper.core.ui.components.Numeral
 import com.dculus.vesper.core.ui.components.RoundIconButton
@@ -94,9 +95,17 @@ internal fun InsightsScreen(
             }
             val day = state.day
             when {
-                state.loading -> Unit
-                day == null -> EmptyDay()
-                else -> HeroCard(day, isToday = state.dayOffset == 0)
+                state.loading -> {
+                    LoadingSpinner()
+                }
+
+                day == null -> {
+                    EmptyDay()
+                }
+
+                else -> {
+                    HeroCard(day, isToday = state.dayOffset == 0)
+                }
             }
             if (!state.loading) Tiles(state.unlocksToday, state.blockedToday)
             if (day != null) {

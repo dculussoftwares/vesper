@@ -43,6 +43,7 @@ import com.dculus.vesper.core.model.hasDerivedOfflineAlert
 import com.dculus.vesper.core.ui.art.LinkArt
 import com.dculus.vesper.core.ui.charts.HourTicks
 import com.dculus.vesper.core.ui.components.GlowCard
+import com.dculus.vesper.core.ui.components.LoadingSpinner
 import com.dculus.vesper.core.ui.components.LocalTabBarPadding
 import com.dculus.vesper.core.ui.components.OnlinePill
 import com.dculus.vesper.core.ui.components.V5Card
@@ -108,6 +109,7 @@ internal fun DevicesScreen(
                 }
             }
             item { ThisPhoneRow(thisPhoneModel, devices.size) }
+            if (state is DevicesUiState.Loading) item { LoadingSpinner() }
             items(devices, key = { it.id }) { device -> DeviceCard(device) { onOpenDevice(device.id) } }
             if (state is DevicesUiState.Loaded && devices.isEmpty()) item { EmptyDevices() }
             item { LinkTile(onLinkPhone) }

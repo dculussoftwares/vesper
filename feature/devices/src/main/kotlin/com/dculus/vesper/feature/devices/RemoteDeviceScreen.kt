@@ -57,6 +57,7 @@ import com.dculus.vesper.core.ui.charts.SmoothAreaChart
 import com.dculus.vesper.core.ui.charts.dayAxisLabels
 import com.dculus.vesper.core.ui.components.AppIconTile
 import com.dculus.vesper.core.ui.components.GlowCard
+import com.dculus.vesper.core.ui.components.LoadingSpinner
 import com.dculus.vesper.core.ui.components.LocalTabBarPadding
 import com.dculus.vesper.core.ui.components.Numeral
 import com.dculus.vesper.core.ui.components.OnlinePill
@@ -221,7 +222,10 @@ private fun RemoteDeviceList(
         verticalArrangement = Arrangement.spacedBy(spacing.gap10),
     ) {
         item { Header(ready, actions.onBack) }
-        if (ready == null) return@LazyColumn
+        if (ready == null) {
+            if (state is RemoteUiState.Loading) item { LoadingSpinner() }
+            return@LazyColumn
+        }
         item { Hero(ready) }
         items(ready.alerts, key = { "alert_${it.id}" }) { AlertCard(it, ready.device.name, actions) }
         items(ready.requests, key = { "request_${it.id}" }) { RequestCard(it, ready.device.name, actions) }
@@ -738,6 +742,7 @@ private fun UnlinkButton(
         variant = PillButtonVariant.Text,
         size = PillButtonSize.Medium,
         enabled = !busy,
+        loading = busy,
         textColor = VesperTheme.colors.destructive,
     )
 }

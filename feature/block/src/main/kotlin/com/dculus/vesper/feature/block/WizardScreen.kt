@@ -73,6 +73,7 @@ import com.dculus.vesper.core.sync.AiReport
 import com.dculus.vesper.core.ui.components.AppIconTile
 import com.dculus.vesper.core.ui.components.DayChips
 import com.dculus.vesper.core.ui.components.GlowCard
+import com.dculus.vesper.core.ui.components.LoadingSpinner
 import com.dculus.vesper.core.ui.components.PillButton
 import com.dculus.vesper.core.ui.components.PillButtonVariant
 import com.dculus.vesper.core.ui.components.RoundIconButton
@@ -202,6 +203,8 @@ fun WizardScreen(
                         WIZARD_STEP_APPS -> AppsStep(state, actions)
                         else -> RulesStep(state, actions, onDelete = { confirmDelete = true })
                     }
+                } else {
+                    LoadingSpinner()
                 }
             }
         }
@@ -872,6 +875,7 @@ private fun RulesStep(
             onClick = actions.onNext,
             modifier = Modifier.fillMaxWidth().testTag(WIZARD_CTA_TAG),
             enabled = state.ready && !state.saving,
+            loading = state.saving,
         )
         if (state.editing && !state.saving) DeleteButton(onClick = onDelete)
     }

@@ -18,6 +18,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.dculus.vesper.core.ui.components.LoadingSpinner
 import com.dculus.vesper.core.ui.components.PillButton
 import com.dculus.vesper.core.ui.components.RoundIconButton
 import com.dculus.vesper.core.ui.components.V5Card
@@ -67,7 +68,7 @@ internal fun LinkAddScreen(
             )
             when (state) {
                 LinkAddState.Loading -> {
-                    Unit
+                    LoadingSpinner()
                 }
 
                 LinkAddState.SignedOut -> {

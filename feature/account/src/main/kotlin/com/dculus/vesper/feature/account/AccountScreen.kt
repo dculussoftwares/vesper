@@ -55,6 +55,7 @@ import com.dculus.vesper.core.blocking.permissions.PermissionIntents
 import com.dculus.vesper.core.model.Permissions
 import com.dculus.vesper.core.sync.AuthUser
 import com.dculus.vesper.core.ui.components.BatteryGuidanceSheet
+import com.dculus.vesper.core.ui.components.LoadingSpinner
 import com.dculus.vesper.core.ui.components.LocalTabBarPadding
 import com.dculus.vesper.core.ui.components.PillButton
 import com.dculus.vesper.core.ui.components.PillButtonSize
@@ -299,7 +300,7 @@ internal fun AccountScreen(
                     color = VesperTheme.colors.ink,
                 )
             }
-            if (state.authLoaded) V5ProfileHeader(state.user, onSignIn)
+            if (state.authLoaded) V5ProfileHeader(state.user, onSignIn) else LoadingSpinner()
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
                     stringResource(R.string.account_system_check),
@@ -367,6 +368,7 @@ internal fun AccountScreen(
                     onSignOut,
                     Modifier.fillMaxWidth().testTag(ACCOUNT_SIGN_OUT_TAG),
                     PillButtonVariant.Secondary,
+                    loading = state.signingOut,
                 )
                 PillButton(
                     stringResource(R.string.account_delete),

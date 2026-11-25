@@ -40,6 +40,8 @@ internal data class AccountUiState(
     val warningGlow: Boolean = true,
     /** Whether a timer with the time left shows as a limited app opens. */
     val appTimer: Boolean = true,
+    /** True while a sign-out is in flight, so the button shows its spinner. */
+    val signingOut: Boolean = false,
 )
 
 /** Where the delete-account flow is. */
@@ -91,6 +93,7 @@ class AccountViewModel
         private val deletion: AccountDeletionRepository,
         private val settings: SettingsRepository,
     ) : ViewModel() {
+        private val signingOut = MutableStateFlow(false)
         private val deleteState = MutableStateFlow(DeleteUiState())
         internal val delete: StateFlow<DeleteUiState> = deleteState.asStateFlow()
 
@@ -100,7 +103,8 @@ class AccountViewModel
                 permissions.observe(),
                 engine.health,
                 settings.settings,
-            ) { user, perms, health, prefs ->
+                signingOut,
+            ) { user, perms, health, prefs, busy ->
                 AccountUiState(
                     user,
                     perms,
@@ -108,6 +112,7 @@ class AccountViewModel
                     authLoaded = true,
                     warningGlow = prefs.usageWarningGlow,
                     appTimer = prefs.appStartTimer,
+                    signingOut = busy,
                 )
             }.stateIn(
                 viewModelScope,
@@ -129,6 +134,8 @@ class AccountViewModel
 
         /** Signs out. Blocks stay on this device; nothing else is stored per account yet (cached devices: M7). */
         fun signOut() {
+            if (signingOut.value) return
+            signingOut.value = true
             viewModelScope.launch {
                 try {
                     auth.signOut()
@@ -138,6 +145,8 @@ class AccountViewModel
                     @Suppress("TooGenericExceptionCaught") e: Exception,
                 ) {
                     Timber.w(e, "Sign out failed")
+                } finally {
+                    signingOut.value = false
                 }
             }
         }
