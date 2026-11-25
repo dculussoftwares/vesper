@@ -3,7 +3,7 @@
 ## The rule
 
 Every resource is created and changed through Terraform, applied by GitHub Actions. That covers GitHub (repo settings,
-ruleset, environments, backlog labels/milestones/issues, Pages), GCP/Firebase and the website's Cloudflare Worker. A change is a PR: the plan is posted on
+ruleset, environments, Pages), GCP/Firebase and the website's Cloudflare Worker. A change is a PR: the plan is posted on
 the PR and the apply runs when it merges to `main`. Nobody creates infrastructure in a console.
 
 There is **one GCP project** (`vesper-prod-31275`, org `natheeshece-org`). Debug builds and release builds use it.
@@ -12,7 +12,7 @@ There is **one GCP project** (`vesper-prod-31275`, org `natheeshece-org`). Debug
 |---|---|---|
 | `infra/seed` | The project, billing link, Terraform state bucket, keyless GitHub login (Workload Identity Federation), the `tf-deploy` and `tf-plan` identities | `seed/` |
 | `infra/gcp` | Firebase project and apps, Auth, Firestore + rules, App Check, Cloud Functions, AI Logic, monitoring, budgets | `gcp/` |
-| `infra/github` | Repo settings, `main` ruleset, `prod` environment, Pages, backlog labels/milestones/issues | `github/` |
+| `infra/github` | Repo settings, `main` ruleset, `prod` environment, Pages | `github/` |
 | `infra/cloudflare` | The website's Worker (`vesper-web`) and its custom domain `vesper.dculus.com` (DNS record + certificate) | `cloudflare/` |
 | `infra/aws` | Amazon SES for the welcome email: the `mail.vesper.dculus.com` identity (DKIM, custom MAIL FROM), its Cloudflare DNS records (incl. DMARC), the AWS role the Cloud Function assumes, a budget alert | `aws/` |
 
@@ -20,8 +20,6 @@ One workflow runs all five: `.github/workflows/infra.yml`.
 
 - **PR:** `validate` (every module, no credentials, forks too), then `plan` (every module, read-only identity, one PR comment per module).
 - **Merge to `main`:** `apply-seed`, then `apply-gcp`, `apply-github` and `apply-cloudflare`, then `apply-aws` (after `apply-gcp`), in the GitHub environment `prod`. No approval step: merging is the approval.
-
-`backlog-board.yml` updates the kanban board when an issue closes or reopens.
 
 ## Welcome email (Amazon SES)
 
@@ -66,7 +64,7 @@ Public configuration is committed: `infra/prod.env`, `infra/seed/terraform.tfvar
 | Kind | Name | Used for |
 |---|---|---|
 | secret | `GCP_BILLING_ACCOUNT` | Billing link (seed) and budgets (gcp) |
-| secret | `BACKLOG_APP_PRIVATE_KEY` + variable `BACKLOG_APP_CLIENT_ID` | GitHub App token: repo settings, ruleset, project board |
+| secret | `BACKLOG_APP_PRIVATE_KEY` + variable `BACKLOG_APP_CLIENT_ID` | GitHub App token: repo settings, ruleset |
 | variable `GOOGLE_OAUTH_WEB_CLIENT_ID` + secret `GOOGLE_OAUTH_WEB_CLIENT_SECRET` | optional | Google sign-in (see below). Empty = provider off |
 | secret | `APP_CHECK_DEBUG_TOKENS` | optional: `{"app":{"<name>":"<uuid>"},"kids":{}}` debug tokens registered with App Check |
 | secret | `ALERT_EMAIL` | optional: where Cloud Monitoring alerts go |
@@ -92,7 +90,7 @@ terraform output -raw prod_env > ../prod.env                                # co
 Then merge: Actions creates everything else. Manual steps that have no API:
 
 1. **GitHub App** (org-owned, installed on this repo only): *Repository → Administration, Issues, Pages: read and write*,
-   *Metadata: read*, *Organization → Projects: read and write*. Set `BACKLOG_APP_CLIENT_ID` and `BACKLOG_APP_PRIVATE_KEY`.
+   *Metadata: read*. Set `BACKLOG_APP_CLIENT_ID` and `BACKLOG_APP_PRIVATE_KEY`.
 2. **Google sign-in:** ordinary OAuth clients have no create API, so create a *Web application* client once in
    *Google Auth Platform → Clients* of the project, then set `GOOGLE_OAUTH_WEB_CLIENT_ID` (variable) and
    `GOOGLE_OAUTH_WEB_CLIENT_SECRET` (secret). Add the redirect URI `https://<project_id>.firebaseapp.com/__/auth/handler`.
@@ -136,17 +134,6 @@ No secrets, tokens, `google-services.json`, keystores or Terraform state in git 
 pre-commit hook). Fork PRs get no secrets and no OIDC token, so they only validate. Plans are posted on the PR and in the
 job log, which are public: keep every secret variable `sensitive = true`. Third-party actions are pinned to commit SHAs.
 
-## Editing the backlog
-
-- Stories: `backlog/phase1/stories/Mxx-yy.md`. Epics: `backlog/phase1/epics/Mxx.md`.
-  YAML front matter (`id`, `title`, `epic`, `size`, `modules`, `depends`, `labels`) + Markdown body.
-- To add a story: add a file, give it a new id, list its `depends`, run `python3 scripts/backlog/waves.py`, and open a PR (check the plan comment).
-- Don't edit issue titles or descriptions on GitHub; Terraform overwrites them. Progress goes on the kanban board and in issue comments.
-  Assignees, state (open/closed) and board Status are not managed by Terraform.
-- Board Status: the sync sets **Backlog** or **Ready** (Ready means every dependency is closed) for new items, promotes Backlog → Ready
-  when dependencies close, and sets Done when an issue closes. Moving a card to *In progress* or *In review* is up to whoever works on it.
-
-
 ## Repository settings and branch ruleset
 
 `infra/github/repository.tf` manages the repository (squash-only merges, delete branch on merge, auto-merge allowed;
@@ -160,7 +147,7 @@ imported with an `import` block) and a ruleset on the default branch:
 
 **Review mechanism: `required_approvals = 0`.** Qodo, the fallback reviewer, cannot approve, so a required approval
 would block fallback merges. The `CodeRabbit` check is not required either (it does not exist in fallback mode). The
-CodeRabbit/Qodo gate is enforced by the agent rules in `docs/agents/PHASE1_EXECUTION.md`; GitHub enforces `ci-pass` and
+CodeRabbit/Qodo gate is enforced by the agent rules in `AGENTS.md`; GitHub enforces `ci-pass` and
 resolved threads. Don't raise `required_approvals` without revisiting the fallback.
 
 
