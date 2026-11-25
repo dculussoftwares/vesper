@@ -5,15 +5,9 @@ variable "owner" {
 }
 
 variable "repository" {
-  description = "Repository the backlog issues are created in."
+  description = "Repository the settings apply to."
   type        = string
   default     = "vesper"
-}
-
-variable "backlog_dir" {
-  description = "Backlog directory, relative to this module."
-  type        = string
-  default     = "../../backlog/phase1"
 }
 
 variable "repository_description" {
