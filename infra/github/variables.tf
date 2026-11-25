@@ -5,15 +5,9 @@ variable "owner" {
 }
 
 variable "repository" {
-  description = "Repository the backlog issues are created in."
+  description = "Repository the settings apply to."
   type        = string
   default     = "vesper"
-}
-
-variable "backlog_dir" {
-  description = "Backlog directory, relative to this module."
-  type        = string
-  default     = "../../backlog/phase1"
 }
 
 variable "repository_description" {
@@ -29,7 +23,7 @@ variable "repository_topics" {
 }
 
 variable "required_approvals" {
-  description = "Approving reviews required on main. Must stay 0: Qodo (the fallback reviewer) cannot approve, so a required approval would block fallback merges. The CodeRabbit/Qodo gate is enforced by docs/agents/PHASE1_EXECUTION.md."
+  description = "Approving reviews required on main. Must stay 0: Qodo (the fallback reviewer) cannot approve, so a required approval would block fallback merges. The CodeRabbit/Qodo gate is enforced by the agent rules in AGENTS.md."
   type        = number
   default     = 0
 }

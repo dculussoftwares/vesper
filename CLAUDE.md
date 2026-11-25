@@ -6,7 +6,7 @@ Guidance for Claude Code in this repository. The shared rules for every coding a
 
 ## Repository status
 
-Phase 1 (M1–M10, waves 1–16) is built; only `needs-human` stories remain. The **v5 UI redesign** (M11–M13, waves 17–24) is next. The repo holds:
+Phase 1 and the v5 UI redesign are built. Work is tracked as plain GitHub issues and PRs (no backlog files, board or wave tooling). The repo holds:
 
 | Path | What |
 |---|---|
@@ -15,14 +15,9 @@ Phase 1 (M1–M10, waves 1–16) is built; only `needs-human` stories remain. Th
 | `docs/design/V5_SPEC.md` | v5 spec for epics M11–M13: strategy, tokens, components, copy per screen, extras |
 | `docs/IMPLEMENTATION_PLAN.md` | Decisions, module map, workflow, definition of done, data model, backend/Functions policy |
 | `docs/INFRASTRUCTURE.md` | Terraform + GitHub Actions only; one prod GCP project; state in GCS; keyless login |
-| `backlog/phase1/` | Epics and stories (source of truth for the GitHub issues) |
-| `infra/` | Terraform: `seed` (project, state bucket, keyless login), `gcp` (Firebase), `github` (repo settings, backlog issues). Public CI values in `infra/prod.env` |
-| `scripts/backlog/sync_project.py` | Post-apply sync: sub-issues, "blocked by" links, Projects v2 board |
-| `.github/workflows/infra.yml` | All Terraform (`infra/seed`, `infra/gcp`, `infra/github`): plan on PR, apply on merge to `main`. `backlog-board.yml` syncs the board when issues close |
+| `infra/` | Terraform: `seed` (project, state bucket, keyless login), `gcp` (Firebase), `github` (repo settings, ruleset, Pages). Public CI values in `infra/prod.env` |
+| `.github/workflows/infra.yml` | All Terraform (`infra/seed`, `infra/gcp`, `infra/github`): plan on PR, apply on merge to `main`. |
 | `.coderabbit.yaml` | CodeRabbit review config (advisory reviewer; never blocks a merge) |
-| `scripts/backlog/board.py` | Move a card on the kanban board / list Ready cards |
-| `docs/agents/PHASE1_EXECUTION.md` | How to run the backlog (`/wave`, `/next-wave`, `/story`), CodeRabbit rules, the 16-wave order |
-| `.claude/commands/`, `.claude/agents/story-worker.md` | The `/wave`, `/next-wave`, `/story` commands and the per-story subagent |
 
 ## Commands
 
@@ -42,29 +37,17 @@ scripts/dev/setup-hooks.sh                                           # install p
 maestro test e2e/flows                                               # end-to-end flows on a running emulator (M1-16)
 ```
 
-Backlog / infra (never apply locally; Actions plans on the PR and applies on merge):
+Infra (never apply locally; Actions plans on the PR and applies on merge):
 
 ```bash
 terraform -chdir=infra/github fmt -recursive && terraform -chdir=infra/github validate
-python3 scripts/backlog/waves.py --check          # wave table in sync with backlog/
-python3 scripts/backlog/board.py ready             # Ready cards on the kanban board
-python3 scripts/backlog/waves.py --status         # progress per wave + NEXT_WAVE
-python3 scripts/backlog/waves.py --wave 3          # one wave's stories, issues and state
 ```
 
-## Working on a story (optional)
+## Working on a change
 
-New work doesn't need a backlog story or issue: branch from `origin/main`, implement, run the Definition-of-done
-command and open a PR. The flow below applies only when you pick up an existing backlog story.
-
-Use **`/wave <N>`** (a whole wave, parallel workers), **`/next-wave`** or **`/story <ID>`** (one story). One session per wave;
-`/clear` between waves. The procedure each worker follows is `.claude/agents/story-worker.md`. In short:
-1. Pick a Ready card, then `gh issue view <n>`: read the scope, acceptance criteria and "Depends on".
-2. `python3 scripts/backlog/board.py status <n> "In progress"`, then branch `m<N>/<n>-<slug>` from `origin/main`.
-3. Implement only the scope and run the Definition-of-done command.
-4. Open a PR (`[Mx-yy] <title>`, body `Closes #<n>`) and move the card to *In review*. Work through CodeRabbit's review
-   (fix or answer every comment; never `@coderabbitai approve`), then squash-merge once the merge gate is met.
-   Don't edit the issue body; Terraform owns it (commit changes to `backlog/phase1/` instead).
+Branch from `origin/main`, implement, run the Definition-of-done command and open a PR (add `Closes #<n>` when there is
+an issue). Work through CodeRabbit's review (fix or answer every comment; never `@coderabbitai approve`), then
+squash-merge once CI is green and no threads are unresolved.
 
 ## Notes for Claude
 

@@ -16,22 +16,18 @@ on:
   pull_request:
     paths:
       - "infra/**"
-      - "backlog/**"
       - "firebase/firestore.rules"
       - "firebase/functions/**"
       - "scripts/infra/**"
-      - "scripts/backlog/**"
       - ".github/actions/terraform-init/**"
       - ".github/workflows/infra.yml"
   push:
     branches: [main]
     paths:
       - "infra/**"
-      - "backlog/**"
       - "firebase/firestore.rules"
       - "firebase/functions/**"
       - "scripts/infra/**"
-      - "scripts/backlog/**"
       - ".github/actions/terraform-init/**"
       - ".github/workflows/infra.yml"
   workflow_dispatch:
@@ -190,7 +186,7 @@ jobs:
         with:
           module: github
           identity: deploy
-      # Repo settings and the ruleset need Repository -> Administration; the board needs org Projects.
+      # Repo settings and the ruleset need Repository -> Administration.
       - name: Mint GitHub App token
         id: app
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
@@ -202,21 +198,10 @@ jobs:
           permission-administration: write
           permission-issues: write
           permission-pages: write
-          permission-organization-projects: write
       - working-directory: infra/github
         env:
           GITHUB_TOKEN: ${{ steps.app.outputs.token }}
         run: terraform apply -auto-approve
-      - name: Link sub-issues and dependencies, sync the project board
-        working-directory: infra/github
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-          GH_TOKEN: ${{ github.token }}
-          APP_TOKEN: ${{ steps.app.outputs.token }}
-        run: |
-          terraform output -json backlog > "$RUNNER_TEMP/backlog.json"
-          python3 ../../scripts/backlog/sync_project.py "$RUNNER_TEMP/backlog.json" relations
-          GH_TOKEN="$APP_TOKEN" python3 ../../scripts/backlog/sync_project.py "$RUNNER_TEMP/backlog.json" board
 
   apply-cloudflare:
     needs: apply-seed

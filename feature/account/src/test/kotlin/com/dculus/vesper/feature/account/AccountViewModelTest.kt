@@ -123,7 +123,10 @@ class AccountViewModelTest {
                 engine.onServiceConnected()
                 assertTrue(awaitItem().engine.serviceBound)
                 viewModel.signOut()
-                assertNull(awaitItem().user)
+                // The spinner state may be emitted first; wait for the signed-out state.
+                var after = awaitItem()
+                while (after.user != null) after = awaitItem()
+                assertNull(after.user)
             }
         }
 
