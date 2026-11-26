@@ -93,12 +93,6 @@ internal fun KidsHomeScreen(
             TodayHero(state.todayMins)
             NoticePreview(parent)
             Text(
-                stringResource(R.string.kids_home_notice_caption).uppercase(),
-                style = type.tag,
-                color = colors.textSecondary,
-                modifier = Modifier.padding(horizontal = VesperTheme.spacing.gap6),
-            )
-            Text(
                 stringResource(R.string.kids_home_rules, parent).uppercase(),
                 style = type.label,
                 color = colors.textSecondary,

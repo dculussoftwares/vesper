@@ -1,7 +1,7 @@
 name: release
 
-# Tag `vMAJOR.MINOR.PATCH` -> signed AABs for both apps, attached to a GitHub Release; the Vesper AAB is uploaded to
-# the Play internal track (keyless login, no JSON key). Setup, secrets and versionCode scheme: docs/RELEASING.md.
+# Tag `vMAJOR.MINOR.PATCH` -> signed AABs for both apps, attached to a GitHub Release; both AABs are uploaded to
+# their Play internal tracks (keyless login, no JSON key). Setup, secrets and versionCode scheme: docs/RELEASING.md.
 # Third-party actions are pinned to commit SHAs.
 
 on:
@@ -165,5 +165,13 @@ jobs:
           packageName: com.dculus.vesper
           releaseFiles: dist/vesper-${{ github.ref_name }}.aab
           mappingFile: dist/vesper-${{ github.ref_name }}-mapping.txt
+          track: internal
+          status: draft
+      - uses: r0adkll/upload-google-play@e738b9dd8f2476ea806d921b64aacd24f34515a5 # v1.1.5
+        with:
+          serviceAccountJson: ${{ steps.gcp.outputs.credentials_file_path }}
+          packageName: com.dculus.vesper.kids
+          releaseFiles: dist/vesper-kids-${{ github.ref_name }}.aab
+          mappingFile: dist/vesper-kids-${{ github.ref_name }}-mapping.txt
           track: internal
           status: draft

@@ -41,9 +41,9 @@ The child app only works linked to a parent. The data below goes to the linked p
 |---|---|---|---|---|---|
 | App activity | App interactions (foreground app, daily per-app minutes and opens) | Yes | No | No | App functionality |
 | App activity | Installed apps (launchable apps list: package and label) | Yes | No | No | App functionality |
-| Device or other IDs | FCM token, Firebase installation ID, link code | Yes | No | No | App functionality |
+| Device or other IDs | Firebase installation ID (and the identifiers Firebase SDKs create), link code | Yes | No | No | App functionality |
 | Device or other IDs | Device model and name | Yes | No | No | App functionality |
-| App activity | Other actions (battery level, charging state, online/last-seen time; Play has no "device info" category) | Yes | No | No | App functionality |
+| App activity | Other actions (battery level, charging state, Android version, online/last-seen time, requests for more time, permission-lost alerts; Play has no "device info" category) | Yes | No | No | App functionality |
 | Personal info | User IDs (child uid) | Yes | No | No | App functionality |
 
 The AI feature is not in the child app.

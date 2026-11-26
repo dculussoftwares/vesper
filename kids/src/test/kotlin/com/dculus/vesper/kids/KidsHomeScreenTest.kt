@@ -55,7 +55,6 @@ class KidsHomeScreenTest {
         composeRule.onNodeWithText("Instagram").assertIsDisplayed()
         composeRule.onNodeWithText("30 min a day").assertIsDisplayed()
         composeRule.onNodeWithText("Mon–Fri · 08:00–15:00").assertIsDisplayed()
-        composeRule.onNodeWithText("↑ PERSISTENT NOTIFICATION · REQUIRED BY PLAY POLICY").assertIsDisplayed()
         composeRule.onNodeWithText("Unlink from Asha").assertIsDisplayed()
     }
 
