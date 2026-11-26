@@ -8,7 +8,6 @@ project_id = "vesper-prod-31275"
 #   1. the debug key (local and CI debug builds),
 #   2. the Play upload key (what CI signs the release AAB with; sideloaded/GitHub-release builds),
 #   3. every Play App Signing key, including "Previous app signing keys" (Play Console > Test and release > App integrity > App signing; what Play installs).
-# Vesper Kids is not on Play yet: it has the debug and upload keys, and gets its Play App Signing keys when published.
 sha1_fingerprints = {
   app = [
     "69:38:3E:14:D2:26:49:38:FB:B2:74:BE:31:64:2F:42:E6:33:B7:A7", # debug
@@ -20,6 +19,9 @@ sha1_fingerprints = {
   kids = [
     "69:38:3E:14:D2:26:49:38:FB:B2:74:BE:31:64:2F:42:E6:33:B7:A7", # debug
     "13:E4:C4:54:46:3D:FE:E0:37:E1:18:ED:5A:27:88:E0:FF:C1:07:71", # upload key (the Kids release is signed with it too)
+    "22:46:36:5B:44:CF:EC:FF:A3:30:96:0A:B4:51:2D:63:9F:17:6C:5E", # Play App Signing (classic)
+    "D8:C4:3C:7D:E4:6E:C3:6F:63:45:71:FE:1C:51:93:95:45:0A:CB:EC", # Play App Signing (post-quantum)
+    "53:64:FB:FA:A8:68:45:25:EA:57:21:99:2D:BB:F9:BD:90:0C:79:10", # Play App Signing (previous key, first used 2026-11-26)
   ]
 }
 sha256_fingerprints = {
@@ -33,6 +35,9 @@ sha256_fingerprints = {
   kids = [
     "0D:1D:88:64:D6:26:6C:14:AD:D4:7E:64:6D:C4:98:80:3B:17:68:3E:F5:9F:A4:D3:9F:26:E1:1D:92:71:1E:9D", # debug
     "CF:3F:B7:CD:B3:EE:51:DD:31:B5:74:4C:21:0D:40:C8:4A:D8:76:1A:18:BA:07:AD:CB:9B:A8:93:9A:E3:64:BE", # upload key
+    "7B:6D:0E:36:C3:25:DB:4C:9F:E6:8D:78:31:44:1E:71:16:4D:17:FC:DD:73:B7:4D:75:FA:11:DB:1C:2A:86:32", # Play App Signing (classic)
+    "0D:35:5D:8C:14:BB:3D:CE:58:7A:73:57:77:37:E1:E1:1A:59:D7:7D:59:28:36:9D:BC:D0:F2:2E:00:63:F4:C0", # Play App Signing (post-quantum)
+    "E8:7D:CE:16:F0:0F:13:C7:2E:31:42:F1:B2:48:F2:05:F6:91:54:5E:C2:99:96:67:32:8D:95:4D:64:8E:5C:F2", # listed in Play's Digital Asset Links snippet
   ]
 }
 
