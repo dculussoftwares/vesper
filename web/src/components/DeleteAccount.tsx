@@ -16,6 +16,7 @@ import {
   signInWithPopup,
   signOut,
 } from "firebase/auth";
+import { type Firestore, collection, getCountFromServer, getDocs, getFirestore } from "firebase/firestore";
 import { type HttpsCallable, getFunctions, httpsCallable } from "firebase/functions";
 
 type Config = FirebaseOptions & { functionsRegion?: string; recaptchaSiteKey?: string };
@@ -24,6 +25,7 @@ type Step = "loading" | "unconfigured" | "signin" | "confirm" | "done";
 interface Firebase {
   auth: Auth;
   appCheck: AppCheck;
+  db: Firestore;
   deleteAccount: HttpsCallable;
 }
 
@@ -46,6 +48,37 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
     );
   });
 }
+
+interface Summary {
+  devices: { name: string; blocks: number }[];
+  blocks: number;
+  notificationTokens: number;
+}
+
+// What the account holds right now, read with the signed-in user's own permissions (the Firestore rules let a parent
+// read everything under users/{uid}). Failures are not fatal: deletion works without the summary.
+async function loadSummary(db: Firestore, uid: string): Promise<Summary> {
+  const base = ["users", uid] as const;
+  const [devices, tokens] = await Promise.all([
+    getDocs(collection(db, ...base, "devices")),
+    getCountFromServer(collection(db, ...base, "fcmTokens")),
+  ]);
+  const rows = await Promise.all(
+    devices.docs.map(async (doc) => {
+      const data = doc.data() as { name?: unknown; model?: unknown };
+      const counted = await getCountFromServer(collection(db, ...base, "devices", doc.id, "blocks"));
+      const label = [data.name, data.model].find((v): v is string => typeof v === "string" && v.length > 0);
+      return { name: label ?? "Linked device", blocks: counted.data().count };
+    }),
+  );
+  return {
+    devices: rows,
+    blocks: rows.reduce((sum, row) => sum + row.blocks, 0),
+    notificationTokens: tokens.data().count,
+  };
+}
+
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
 async function loadConfig(): Promise<Config | null> {
   try {
@@ -85,6 +118,8 @@ export default function DeleteAccount() {
   const [who, setWho] = useState("");
   const [status, setStatus] = useState({ message: "", error: false });
   const [deleting, setDeleting] = useState(false);
+  const [summary, setSummary] = useState<Summary | "loading" | "failed">("loading");
+  const dialog = useRef<HTMLDialogElement>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   // The account the user confirmed. If the signed-in user changes (another tab, expiry), the confirmation is dropped.
@@ -109,7 +144,7 @@ export default function DeleteAccount() {
       });
       const auth = getAuth(app);
       const deleteAccount = httpsCallable(getFunctions(app, functionsRegion || "europe-west1"), "deleteAccount");
-      setFirebase({ auth, appCheck, deleteAccount });
+      setFirebase({ auth, appCheck, db: getFirestore(app), deleteAccount });
       setStep("signin");
       unsubscribe = onAuthStateChanged(auth, (user) => {
         if (confirmedUid.current && (!user || user.uid !== confirmedUid.current)) {
@@ -128,6 +163,13 @@ export default function DeleteAccount() {
     confirmedUid.current = user.uid;
     setWho(user.email || user.displayName || "your account");
     setStep("confirm");
+    setSummary("loading");
+    if (firebase) {
+      loadSummary(firebase.db, user.uid).then(
+        (loaded) => confirmedUid.current === user.uid && setSummary(loaded),
+        () => confirmedUid.current === user.uid && setSummary("failed"),
+      );
+    }
   }
 
   async function signInWithGoogle() {
@@ -163,7 +205,7 @@ export default function DeleteAccount() {
 
   async function deleteEverything() {
     if (!firebase) return;
-    if (!window.confirm("Delete your account and all data? This cannot be undone.")) return;
+    dialog.current?.close();
     const current = firebase.auth.currentUser;
     if (!confirmedUid.current || !current || current.uid !== confirmedUid.current) {
       confirmedUid.current = null;
@@ -251,14 +293,66 @@ export default function DeleteAccount() {
           <p>
             Signed in as <strong>{who}</strong>.
           </p>
-          <div className="actions">
-            <button type="button" className="button danger" onClick={deleteEverything} disabled={deleting}>
+
+          <div className="del-summary" aria-live="polite">
+            <h3>Stored with this account</h3>
+            {summary === "loading" && <p className="del-muted">Checking what is stored...</p>}
+            {summary === "failed" && (
+              <p className="del-muted">We could not list your data. Deleting still removes all of it.</p>
+            )}
+            {typeof summary === "object" && (
+              <>
+                <ul>
+                  <li>
+                    <strong>{plural(summary.devices.length, "linked device", "linked devices")}</strong>
+                    {summary.devices.length > 0 && (
+                      <span className="del-muted"> ({summary.devices.map((d) => d.name).join(", ")})</span>
+                    )}
+                  </li>
+                  <li>
+                    <strong>{plural(summary.blocks, "block rule", "block rules")}</strong>
+                  </li>
+                  <li>
+                    <strong>{plural(summary.notificationTokens, "notification token", "notification tokens")}</strong>
+                  </li>
+                  <li>Your sign-in account, requests, alerts and usage history</li>
+                </ul>
+              </>
+            )}
+          </div>
+
+          <div className="del-actions">
+            <button type="button" className="button danger" onClick={() => dialog.current?.showModal()} disabled={deleting}>
               Delete account and all data
             </button>
             <button type="button" className="button quiet" onClick={cancel} disabled={deleting}>
               Sign out
             </button>
           </div>
+
+          <dialog
+            ref={dialog}
+            className="del-dialog"
+            aria-labelledby="del-dialog-title"
+            onClick={(event) => event.target === dialog.current && dialog.current?.close()}
+          >
+            <h2 id="del-dialog-title">Delete your account?</h2>
+            <p>
+              <strong>{who}</strong> and everything stored with it will be removed
+              {typeof summary === "object" && summary.devices.length > 0
+                ? `, including ${plural(summary.devices.length, "linked device", "linked devices")}, which will reset`
+                : ""}
+              . This cannot be undone.
+            </p>
+            <div className="del-actions">
+              <button type="button" className="button danger" onClick={deleteEverything}>
+                Yes, delete everything
+              </button>
+              <button type="button" className="button quiet" onClick={() => dialog.current?.close()}>
+                Keep my account
+              </button>
+            </div>
+          </dialog>
         </section>
       )}
 

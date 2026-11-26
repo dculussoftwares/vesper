@@ -146,6 +146,60 @@ import DeleteAccount from "../components/DeleteAccount";
     margin-top: 16px;
   }
 
+  .del-panel :global(.del-summary) {
+    margin: 24px 0;
+    padding: 20px 24px;
+    border-radius: 24px;
+    background: var(--bg);
+  }
+
+  .del-panel :global(.del-summary h3) {
+    margin: 0 0 12px;
+    font-size: var(--t-small);
+    font-weight: 600;
+    color: var(--muted);
+  }
+
+  .del-panel :global(.del-summary ul) {
+    margin: 0;
+    padding-left: 1.2em;
+    display: grid;
+    gap: 8px;
+  }
+
+  .del-panel :global(.del-muted) {
+    color: var(--muted);
+  }
+
+  /* Stacked, full width: the two pills never sit crowded side by side or wrap awkwardly. */
+  .del-panel :global(.del-actions) {
+    display: grid;
+    gap: 12px;
+    margin-top: 8px;
+  }
+
+  .del-panel :global(.del-dialog) {
+    width: min(480px, calc(100vw - 32px));
+    padding: clamp(24px, 4vw, 36px);
+    border: 0;
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--ink);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.25);
+  }
+
+  .del-panel :global(.del-dialog::backdrop) {
+    background: rgba(20, 30, 24, 0.55);
+  }
+
+  .del-panel :global(.del-dialog h2) {
+    margin-bottom: 16px;
+  }
+
+  .del-panel :global(.del-dialog p) {
+    margin-bottom: 24px;
+  }
+
   .del-panel :global(.del-note) {
     font-size: 19px;
     line-height: 1.45;
