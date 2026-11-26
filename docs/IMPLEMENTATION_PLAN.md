@@ -24,7 +24,7 @@ reviewed by CodeRabbit**. This document is the shared contract all changes refer
 | Two apps | `:app` = self-control + parent. `:kids` = child companion (carries `IsMonitoringTool`, FGS `specialUse`, persistent notification) |
 | Accounts | **Optional.** "Continue without an account" on sign-in. Self-blocking and AI work with no account; an account is needed only to link a child's phone. The child phone has no account (Firebase Anonymous Auth under the hood) |
 | Backend | **Firebase-first**: Auth, Firestore + security rules, App Check, FCM, AI Logic (Gemini). Client SDKs talk to Firebase directly; **Cloud Functions (TypeScript, 2nd gen, Blaze plan) only where security or clean architecture needs them** (7 functions, see §8). Lives in `/firebase` |
-| Infrastructure | **Only Terraform, applied by GitHub Actions** (state in a GCS bucket), for GitHub (repo settings, Pages) and GCP/Firebase, in one prod project. See `docs/INFRASTRUCTURE.md` |
+| Infrastructure | **Only Terraform, applied by GitHub Actions** (state in a GCS bucket), for GitHub (repo settings) and GCP/Firebase, in one prod project. See `docs/INFRASTRUCTURE.md` |
 | Open source | GPL-3.0. Forks bring their own `google-services.json`; the app **must build and run without it** (Firebase features disabled) |
 | Fonts | Plus Jakarta Sans (SIL OFL 1.1), bundled as a variable font; see `docs/FONTS.md` |
 | "Use, then rest" | The *use* window counts **foreground time only**. When used up, the app locks for *rest* minutes; the next open after that starts a new window |
@@ -52,7 +52,7 @@ reviewed by CodeRabbit**. This document is the shared contract all changes refer
 :feature:account           Account, permission health, delete account
 /firebase                  firestore.rules, Cloud Functions (TS), emulator tests (deployed by Terraform, never the Firebase CLI)
 /web                       Website (Astro + React): privacy policy, account deletion; vesper.dculus.com on Cloudflare
-/infra/github              Terraform: repo settings, ruleset, Pages
+/infra/github              Terraform: repo settings, ruleset
 /infra/seed                Terraform: the GCP project, state bucket, keyless GitHub login, CI identities
 /infra/gcp                 Terraform: Firebase/GCP resources inside the project
 ```
