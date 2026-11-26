@@ -348,7 +348,7 @@ export default function DeleteAccount() {
               <button type="button" className="button danger" onClick={deleteEverything}>
                 Yes, delete everything
               </button>
-              <button type="button" className="button quiet" onClick={() => dialog.current?.close()}>
+              <button type="button" className="button quiet" autoFocus onClick={() => dialog.current?.close()}>
                 Keep my account
               </button>
             </div>
