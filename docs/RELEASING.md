@@ -39,6 +39,10 @@ N of `-rcN` and 99 for a final tag, so `v0.2.0-rc1` < `v0.2.0` < `v0.2.1-rc1`.
    `infra/seed`). In Play Console > Users and permissions, invite that address with access to the Vesper and Vesper Kids
    apps and the permissions *Release to testing tracks* and *Manage testing tracks*.
 
+   Each app uploads in its own job, so a failed one can be re-run alone. Vesper's first bundle went up from CI with no
+   manual upload. If Play refuses the API upload for a new app, upload that release's `.aab` by hand in Play Console
+   (Internal testing > Create new release); later tags then upload from CI.
+
 Terraform creates the `release` environment (`infra/github/repository.tf`): only `v*` tags may deploy to it, and the
 workflow also refuses tags that do not point at a commit on `main`. There is no approval step.
 
