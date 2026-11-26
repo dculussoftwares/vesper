@@ -2,8 +2,7 @@
 
 A tag `vMAJOR.MINOR.PATCH` (or `vMAJOR.MINOR.PATCH-rcN`, N 1..98, the only pre-release form; it marks the GitHub Release as a pre-release) runs
 `.github/workflows/release.yml`: signed AABs for `:app` and `:kids`, attached to a GitHub Release together with the R8
-mapping files, and the Vesper bundle uploaded to the Play **internal** track (draft). Vesper Kids is not on Play yet, so only its
-GitHub Release bundle is made.
+mapping files, and both bundles uploaded to their Play **internal** tracks (as drafts).
 
 ```bash
 git tag v0.2.0 && git push origin v0.2.0
@@ -37,8 +36,12 @@ N of `-rcN` and 99 for a final tag, so `v0.2.0-rc1` < `v0.2.0` < `v0.2.1-rc1`.
 
 3. **Play upload access.** No JSON key: the `play-internal-track` job logs in keylessly as
    `play-publisher@vesper-prod-31275.iam.gserviceaccount.com` (`GCP_PLAY_SA` in `infra/prod.env`, created by
-   `infra/seed`). In Play Console > Users and permissions, invite that address with access to the Vesper app and the
-   permissions *Release to testing tracks* and *Manage testing tracks*.
+   `infra/seed`). In Play Console > Users and permissions, invite that address with access to the Vesper and Vesper Kids
+   apps and the permissions *Release to testing tracks* and *Manage testing tracks*.
+
+   Each app uploads in its own job, so a failed one can be re-run alone. Vesper's first bundle went up from CI with no
+   manual upload. If Play refuses the API upload for a new app, upload that release's `.aab` by hand in Play Console
+   (Internal testing > Create new release); later tags then upload from CI.
 
 Terraform creates the `release` environment (`infra/github/repository.tf`): only `v*` tags may deploy to it, and the
 workflow also refuses tags that do not point at a commit on `main`. There is no approval step.
