@@ -120,6 +120,7 @@ export default function DeleteAccount() {
   const [deleting, setDeleting] = useState(false);
   const [summary, setSummary] = useState<Summary | "loading" | "failed">("loading");
   const dialog = useRef<HTMLDialogElement>(null);
+  const keepButton = useRef<HTMLButtonElement>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   // The account the user confirmed. If the signed-in user changes (another tab, expiry), the confirmation is dropped.
@@ -201,6 +202,12 @@ export default function DeleteAccount() {
     await signOut(firebase.auth);
     setStep("signin");
     say("");
+  }
+
+  // Focus the harmless choice first: pressing Enter right after the dialog opens must not delete the account.
+  function openDialog() {
+    dialog.current?.showModal();
+    keepButton.current?.focus();
   }
 
   async function deleteEverything() {
@@ -322,7 +329,7 @@ export default function DeleteAccount() {
           </div>
 
           <div className="del-actions">
-            <button type="button" className="button danger" onClick={() => dialog.current?.showModal()} disabled={deleting}>
+            <button type="button" className="button danger" onClick={openDialog} disabled={deleting}>
               Delete account and all data
             </button>
             <button type="button" className="button quiet" onClick={cancel} disabled={deleting}>
@@ -348,7 +355,7 @@ export default function DeleteAccount() {
               <button type="button" className="button danger" onClick={deleteEverything}>
                 Yes, delete everything
               </button>
-              <button type="button" className="button quiet" autoFocus onClick={() => dialog.current?.close()}>
+              <button type="button" className="button quiet" ref={keepButton} onClick={() => dialog.current?.close()}>
                 Keep my account
               </button>
             </div>
