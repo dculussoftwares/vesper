@@ -15,7 +15,7 @@ Phase 1 and the v5 UI redesign are built. Work is tracked as plain GitHub issues
 | `docs/design/V5_SPEC.md` | v5 spec for epics M11–M13: strategy, tokens, components, copy per screen, extras |
 | `docs/IMPLEMENTATION_PLAN.md` | Decisions, module map, workflow, definition of done, data model, backend/Functions policy |
 | `docs/INFRASTRUCTURE.md` | Terraform + GitHub Actions only; one prod GCP project; state in GCS; keyless login |
-| `infra/` | Terraform: `seed` (project, state bucket, keyless login), `gcp` (Firebase), `github` (repo settings, ruleset, Pages). Public CI values in `infra/prod.env` |
+| `infra/` | Terraform: `seed` (project, state bucket, keyless login), `gcp` (Firebase), `github` (repo settings, ruleset). Public CI values in `infra/prod.env` |
 | `.github/workflows/infra.yml` | All Terraform (`infra/seed`, `infra/gcp`, `infra/github`): plan on PR, apply on merge to `main`. |
 | `.coderabbit.yaml` | CodeRabbit review config (advisory reviewer; never blocks a merge) |
 
