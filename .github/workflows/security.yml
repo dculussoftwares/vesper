@@ -36,7 +36,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+      - uses: actions/dependency-review-action@bbc44d14a204704ccc493733616cd1e93a0321ec # v5.0.1
         with:
           fail-on-severity: high
           # Licences that cannot be combined into a GPL-3.0 work (GPL-2.0-only, CDDL, non-commercial and source-available terms).
@@ -100,7 +100,7 @@ jobs:
       - name: Upload SARIF (code scanning)
         if: ${{ !cancelled() && github.event.pull_request.head.repo.fork != true }}
         continue-on-error: true
-        uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        uses: github/codeql-action/upload-sarif@1bd86f2fdb4b86187fa4059f16f31a3202acc9ea # v4.39.4
         with:
           sarif_file: trivy-iac.sarif
           category: trivy-iac
@@ -150,7 +150,7 @@ jobs:
         with:
           persist-credentials: false
       # Template injection, excessive permissions, unpinned actions. Findings below "high" are not blocking.
-      - uses: zizmorcore/zizmor-action@cc914d7f3750a2d13d75c7f184a1060aa0e9d482 # v0.6.4
+      - uses: zizmorcore/zizmor-action@1b4550e929643b8b26a62303c6bd64814271a4f1 # v0.9.2
         with:
           min-severity: high
           advanced-security: false
