@@ -18,7 +18,7 @@ Store the files next to this README. Never use mock-ups that show features that 
 |---|---|---|---|
 | App icon | 512 x 512 PNG, 32-bit, max 1 MB | `icon-app.png` | `icon-kids.png` |
 | Feature graphic | 1024 x 500 PNG or JPEG, no alpha | `feature-app.png` | `feature-kids.png` |
-| Phone screenshots | 2 to 8, 16:9 or 9:16, 320 to 3840 px per side | `screenshots/app-*.png` | `screenshots/kids-*.jpg` |
+| Phone screenshots | 2 to 8, 16:9 or 9:16, 320 to 3840 px per side | `screenshots/app-*.jpg` (the rest are only in Play Console) | `screenshots/kids-*.jpg` |
 
 The Kids screenshots are rendered from the app's screens with sample data (Roborazzi at 3x), then framed with a caption.
 
