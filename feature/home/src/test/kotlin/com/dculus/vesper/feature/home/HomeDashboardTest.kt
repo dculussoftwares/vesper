@@ -153,18 +153,6 @@ class HomeDashboardTest {
         assertEquals(listOf("newBlock"), taps.log)
     }
 
-    @Test fun aiPillOpensDescribeAndIsHiddenWhileAiIsOff() {
-        show(homeState())
-        composeRule.onNodeWithTag(HOME_AI_DESCRIBE_TAG).performClick()
-        assertEquals(listOf("ai"), taps.log)
-    }
-
-    @Test fun aiPillIsHiddenWhileAiIsOff() {
-        show(homeState(aiAvailable = false))
-        composeRule.onNodeWithTag(HOME_AI_DESCRIBE_TAG).assertDoesNotExist()
-        composeRule.onNodeWithTag(HOME_NEW_BLOCK_TAG).assertExists()
-    }
-
     @Test fun idleBreakTileOpensTheSheetAndStartingPassesTheChosenLength() {
         show(homeState())
         composeRule.onNodeWithTag(BREAK_IDLE_CARD_TAG).performClick()

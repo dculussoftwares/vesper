@@ -51,12 +51,9 @@ class WizardRulesViewModelTest {
         handle,
         FakeTargetApps(apps),
         devices,
-        FakeSettingsRepository(),
         if (failingSave) FailingBlocks() else blocks,
         noDeviceBlocks(deviceRepo),
         clock,
-        AiDraftHandoff(),
-        FakeAiReporter(),
     )
 
     private fun WizardViewModel.toRules(type: BlockType) {
@@ -141,17 +138,6 @@ class WizardRulesViewModelTest {
         vm.setDays(DaysOfWeek.WEEKENDS)
         vm.pickSchedulePreset(SchedulePreset.Night)
         assertEquals(DaysOfWeek.WEEKENDS, vm.state.value.draft.days)
-    }
-
-    @Test
-    fun changeTypeLeavesAiMode() {
-        val vm = viewModel(SavedStateHandle())
-        vm.toRules(BlockType.LIMIT)
-        vm.openAiDraft(BlockDraft(aiNote = "Instagram for 30 minutes a day"))
-        assertEquals(true, vm.state.value.draft.fromAi)
-        vm.changeType()
-        assertEquals(WIZARD_STEP_TYPE, vm.state.value.step)
-        assertEquals(false, vm.state.value.draft.fromAi)
     }
 
     @Test

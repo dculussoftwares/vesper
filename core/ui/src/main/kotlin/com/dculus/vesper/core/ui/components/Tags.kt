@@ -128,12 +128,9 @@ enum class StatusTagKind {
 
     /** Green: a child asked for something. */
     Request,
-
-    /** Green with a sparkle: the block was drafted by AI. */
-    AiDraft,
 }
 
-/** Status pill, 12/700 white on red or green: 28 dp ([StatusTagKind.AiDraft]: 26 dp). Informational, not clickable. */
+/** Status pill, 12/700 white on red or green, 28 dp. Informational, not clickable. */
 @Composable
 fun StatusTag(
     kind: StatusTagKind,
@@ -152,18 +149,6 @@ fun StatusTag(
         StatusTagKind.Request -> {
             TagPill(28.dp, c.green, modifier) {
                 TagText(stringResource(R.string.v5_tag_request), c.onGradient, style)
-            }
-        }
-
-        StatusTagKind.AiDraft -> {
-            TagPill(26.dp, c.green, modifier, gap = 5.dp) {
-                Icon(
-                    V5Icons.sparkle,
-                    contentDescription = null,
-                    tint = c.onGradient,
-                    modifier = Modifier.size(11.dp),
-                )
-                TagText(stringResource(R.string.v5_tag_ai_draft), c.onGradient, style)
             }
         }
     }
@@ -219,7 +204,6 @@ internal fun TagsPreview() {
         TargetTag("Aarav's phone", onClick = {})
         StatusTag(StatusTagKind.ProtectionOff)
         StatusTag(StatusTagKind.Request)
-        StatusTag(StatusTagKind.AiDraft)
         OnlinePill()
         OnlinePill(online = false)
         Box(Modifier.background(V5Gradients.brand.adaptive).padding(12.dp)) {

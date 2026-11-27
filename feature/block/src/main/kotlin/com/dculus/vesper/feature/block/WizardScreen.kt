@@ -69,7 +69,6 @@ import com.dculus.vesper.core.model.RulerScales
 import com.dculus.vesper.core.model.TimeRange
 import com.dculus.vesper.core.model.rulerReadout
 import com.dculus.vesper.core.model.v5Duration
-import com.dculus.vesper.core.sync.AiReport
 import com.dculus.vesper.core.ui.components.AppIconTile
 import com.dculus.vesper.core.ui.components.DayChips
 import com.dculus.vesper.core.ui.components.GlowCard
@@ -101,10 +100,8 @@ const val WIZARD_BACK_TAG = "wizard_back"
 const val WIZARD_CLOSE_TAG = "wizard_close"
 const val WIZARD_TARGET_TAG = "wizard_target"
 const val WIZARD_CTA_TAG = "wizard_cta"
-const val WIZARD_DESCRIBE_TAG = "wizard_describe"
 const val WIZARD_RULES_TAG = "wizard_rules"
 const val WIZARD_SUMMARY_TAG = "wizard_summary"
-const val WIZARD_AI_BANNER_TAG = "wizard_ai_banner"
 const val WIZARD_RULER_TAG = "wizard_ruler"
 const val WIZARD_RANGE_TEXT_TAG = "wizard_range_text"
 const val WIZARD_RANGE_CUSTOM_TAG = "wizard_range_custom"
@@ -114,10 +111,6 @@ const val WIZARD_DELETE_KEEP_TAG = "wizard_delete_keep"
 const val WIZARD_APPS_ROW_TAG = "wizard_apps_row"
 const val WIZARD_DISCARD_TAG = "wizard_discard"
 const val WIZARD_KEEP_EDITING_TAG = "wizard_keep_editing"
-const val WIZARD_REPORT_TAG = "wizard_report"
-const val WIZARD_REPORT_CONFIRM_TAG = "wizard_report_confirm"
-const val WIZARD_REPORT_SENTENCE_TAG = "wizard_report_sentence"
-const val WIZARD_REPORT_DRAFT_TAG = "wizard_report_draft"
 
 fun wizardPresetTag(preset: SchedulePreset): String = "wizard_preset_${preset.name.lowercase()}"
 
@@ -132,7 +125,6 @@ data class WizardActions(
     val onPickType: (BlockType) -> Unit = {},
     val onToggleApp: (String) -> Unit = {},
     val onNext: () -> Unit = {},
-    val onDescribe: () -> Unit = {},
     val onFlipTarget: () -> Unit = {},
     val onPeriod: (LimitPeriod) -> Unit = {},
     val onMins: (Int) -> Unit = {},
@@ -143,12 +135,10 @@ data class WizardActions(
     val onCycleEdit: (CycleEdit) -> Unit = {},
     val onCycleScope: (CycleScope) -> Unit = {},
     val onRange: (TimeRange) -> Unit = {},
-    val onChangeType: () -> Unit = {},
     val onDelete: () -> Unit = {},
     val onEditApps: () -> Unit = {},
     val onKeepEditing: () -> Unit = {},
     val onDiscard: () -> Unit = {},
-    val onReport: () -> Unit = {},
 )
 
 private val WizardTypes = BlockType.entries
@@ -181,7 +171,6 @@ fun WizardScreen(
     modifier: Modifier = Modifier,
 ) {
     var confirmDelete by remember { mutableStateOf(false) }
-    var confirmReport by remember { mutableStateOf(false) }
     V5Screen(darkContent = false, modifier = modifier) {
         Column(
             modifier =
@@ -193,9 +182,6 @@ fun WizardScreen(
         ) {
             WizardTopBar(actions.onBack, actions.onClose)
             WizardTitle(state, actions.onFlipTarget)
-            if (state.step == WIZARD_STEP_RULES && state.draft.fromAi) {
-                AiDraftBanner(state.draft, actions.onChangeType, onReport = { confirmReport = true })
-            }
             Box(Modifier.weight(1f)) {
                 if (state.ready) {
                     when (state.step) {
@@ -224,73 +210,6 @@ fun WizardScreen(
             onKeep = { confirmDelete = false },
         )
     }
-    V5BottomSheet(visible = confirmReport, onDismiss = { confirmReport = false }) {
-        ReportSheetContent(
-            report = AiReport(state.aiSentence, state.aiOriginal ?: state.draft),
-            sending = state.reporting,
-            onSend = {
-                // A second tap while the sheet slides out must not send twice.
-                if (confirmReport) {
-                    confirmReport = false
-                    actions.onReport()
-                }
-            },
-            onCancel = { confirmReport = false },
-        )
-    }
-}
-
-/** Confirm sheet of "Report a bad result": shows exactly what is sent (the sentence and the draft fields). */
-@Composable
-private fun ColumnScope.ReportSheetContent(
-    report: AiReport,
-    sending: Boolean,
-    onSend: () -> Unit,
-    onCancel: () -> Unit,
-) {
-    val c = VesperTheme.colors
-    Text(stringResource(R.string.block_report_title), style = VesperTheme.type.heading, color = c.ink)
-    Text(stringResource(R.string.block_report_body), style = VesperTheme.type.body, color = c.textSecondary)
-    // Scrolls on its own so a long sentence never pushes "Send report" off the screen.
-    Column(
-        modifier = Modifier.fillMaxWidth().heightIn(max = 260.dp).verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Text(
-            stringResource(R.string.block_report_sentence_label),
-            style = VesperTheme.type.label,
-            color = c.textSecondary,
-        )
-        Text(
-            report.sentence,
-            style = VesperTheme.type.body,
-            color = c.ink,
-            modifier = Modifier.testTag(WIZARD_REPORT_SENTENCE_TAG),
-        )
-        Text(
-            stringResource(R.string.block_report_draft_label),
-            style = VesperTheme.type.label,
-            color = c.textSecondary,
-        )
-        Text(
-            report.draftFields.entries.joinToString("\n") { (key, value) -> "$key: $value" },
-            style = VesperTheme.type.body.copy(fontSize = 13.sp),
-            color = c.ink,
-            modifier = Modifier.testTag(WIZARD_REPORT_DRAFT_TAG),
-        )
-    }
-    PillButton(
-        text = stringResource(R.string.block_report_send),
-        onClick = onSend,
-        enabled = !sending,
-        modifier = Modifier.fillMaxWidth().testTag(WIZARD_REPORT_CONFIRM_TAG),
-    )
-    PillButton(
-        text = stringResource(R.string.block_report_cancel),
-        onClick = onCancel,
-        variant = PillButtonVariant.Text,
-        modifier = Modifier.fillMaxWidth(),
-    )
 }
 
 @Composable
@@ -358,7 +277,7 @@ private fun AppsRow(
                 )
             }
             Text(
-                stringResource(R.string.block_wizard_ai_change),
+                stringResource(R.string.block_wizard_change),
                 style = VesperTheme.type.label,
                 color = VesperTheme.colors.ink,
             )
@@ -533,29 +452,6 @@ private fun TypeStep(
                 modifier = Modifier.padding(top = 8.dp).fillMaxWidth().testTag(WIZARD_CTA_TAG),
                 enabled = state.ready,
             )
-        }
-        if (state.aiAvailable) {
-            item {
-                val c = VesperTheme.colors
-                Row(
-                    modifier =
-                        Modifier
-                            .padding(top = 2.dp)
-                            .fillMaxWidth()
-                            .heightIn(min = VesperTheme.spacing.minTouchTarget)
-                            .testTag(WIZARD_DESCRIBE_TAG)
-                            .clickable(role = Role.Button, onClick = actions.onDescribe),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(V5Icons.sparkle, contentDescription = null, tint = c.green, modifier = Modifier.size(15.dp))
-                    Text(
-                        stringResource(R.string.block_wizard_describe),
-                        style = VesperTheme.type.label.copy(fontSize = 15.sp),
-                        color = c.ink,
-                    )
-                }
-            }
         }
     }
 }
@@ -737,62 +633,6 @@ private fun AppTile(
             }
         }
     }
-}
-
-/** The "AI draft" banner above the rules (V5_SPEC §5); filled by the AI flow through `BlockDraft.fromAi` / `aiNote`. */
-@Composable
-private fun AiDraftBanner(
-    draft: BlockDraft,
-    onChange: () -> Unit,
-    onReport: () -> Unit,
-) {
-    val c = VesperTheme.colors
-    Column(
-        modifier =
-            Modifier
-                .padding(horizontal = ScreenPadding)
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(24.dp))
-                .background(c.surface)
-                .padding(horizontal = 14.dp, vertical = 12.dp)
-                .testTag(WIZARD_AI_BANNER_TAG),
-        verticalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-            StatusTag(StatusTagKind.AiDraft)
-            Text(
-                stringResource(R.string.block_wizard_ai_banner),
-                style = VesperTheme.type.body.copy(fontSize = 14.sp),
-                color = c.textTertiary,
-                modifier = Modifier.weight(1f),
-            )
-        }
-        if (draft.aiNote.isNotBlank()) {
-            Text(draft.aiNote, style = VesperTheme.type.body.copy(fontSize = 14.sp), color = c.textSecondary)
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            BannerAction(stringResource(R.string.block_wizard_ai_change), onChange)
-            BannerAction(stringResource(R.string.block_report_action), onReport, Modifier.testTag(WIZARD_REPORT_TAG))
-        }
-    }
-}
-
-@Composable
-private fun BannerAction(
-    text: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Text(
-        text,
-        style = VesperTheme.type.label,
-        color = VesperTheme.colors.ink,
-        modifier =
-            modifier
-                .heightIn(min = VesperTheme.spacing.minTouchTarget)
-                .clickable(role = Role.Button, onClick = onClick)
-                .padding(vertical = 14.dp),
-    )
 }
 
 /** Step 3: the rule card of the chosen type, "Repeat on", the "Summary" card and the "Turn on block" button. */

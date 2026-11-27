@@ -45,7 +45,7 @@ data object Account
 
 /**
  * Block wizard. [target] is the child device id the block is for (null = this phone);
- * [prefill] is an optional template or AI-suggested block to start from (null = empty).
+ * [prefill] is an optional template to start from (null = empty).
  */
 @Serializable
 data class BlockWizard(
@@ -53,12 +53,6 @@ data class BlockWizard(
     val prefill: String? = null,
     /** Edit mode: the id of the block to edit; the wizard opens at step 3 with its values. */
     val blockId: String? = null,
-)
-
-/** "Describe a block" (AI) screen; [target] is the child device id the block is for (null = this phone). */
-@Serializable
-data class BlockDescribe(
-    val target: String? = null,
 )
 
 @Serializable

@@ -56,16 +56,6 @@ abstract class SettingsRepositoryContract {
                     AppSettings(onboardingComplete = true, accountSkipped = true, accessibilityConsentAt = consent),
                     awaitItem(),
                 )
-                repo.setAiEnabled(true)
-                assertEquals(
-                    AppSettings(
-                        onboardingComplete = true,
-                        accountSkipped = true,
-                        accessibilityConsentAt = consent,
-                        aiEnabled = true,
-                    ),
-                    awaitItem(),
-                )
                 cancelAndIgnoreRemainingEvents()
             }
         }
@@ -116,7 +106,6 @@ abstract class SettingsRepositoryContract {
     fun `goal defaults to 180 minutes, also when other settings already exist`() =
         runTest {
             repo.setOnboardingComplete(true)
-            repo.setAiEnabled(true)
             repo.screenTimeGoalMins.test {
                 assertEquals(180, awaitItem())
                 cancelAndIgnoreRemainingEvents()

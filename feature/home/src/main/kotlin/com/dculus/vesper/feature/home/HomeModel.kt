@@ -95,8 +95,6 @@ internal data class HomeUiState(
     val gauge: GaugeUi,
     val blocks: List<HomeBlockUi>,
     val devices: List<LinkedDevice>,
-    /** AI is switched on in settings; the "Describe a block" pill is hidden otherwise. */
-    val aiAvailable: Boolean,
 ) {
     /** Blocks of this phone that are switched on (the "{n} on this phone" line). */
     val activeBlockCount: Int get() = blocks.count { it.block.enabled }

@@ -77,8 +77,6 @@ interface SettingsRepository {
 
     suspend fun setAccessibilityConsentAt(at: Instant?)
 
-    suspend fun setAiEnabled(enabled: Boolean)
-
     suspend fun setUsageWarningGlow(enabled: Boolean)
 
     suspend fun setAppStartTimer(enabled: Boolean)

@@ -273,77 +273,6 @@
   transform: translateX(calc(22 * var(--u)));
 }
 
-/* "Describe a block in your words". */
-.live .ask-pill {
-  display: flex;
-  align-items: center;
-  gap: calc(12 * var(--u));
-  height: calc(60 * var(--u));
-  padding: 0 calc(7 * var(--u)) 0 calc(20 * var(--u));
-  border-radius: 999px;
-  background: var(--surface);
-}
-
-.live .ask-pill.small {
-  height: calc(64 * var(--u));
-}
-
-.live .ask-pill .spark {
-  flex: none;
-  width: calc(19 * var(--u));
-  color: var(--green);
-}
-
-.live .ask-text {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  font-size: calc(16 * var(--u));
-  color: var(--muted);
-}
-
-.live .ask-text .tx {
-  display: none;
-  color: var(--ink);
-}
-
-.live .ask-text.typing .ph {
-  display: none;
-}
-
-.live .ask-text.typing .tx {
-  display: inline;
-}
-
-.live .ask-text.typing .tx::after,
-.live .caret {
-  content: "";
-  display: inline-block;
-  width: calc(2 * var(--u));
-  height: 1.1em;
-  margin-left: calc(2 * var(--u));
-  vertical-align: -0.18em;
-  background: var(--green);
-  animation: live-blink 1s steps(1) infinite;
-}
-
-.live .ask-pill .go {
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: calc(46 * var(--u));
-  height: calc(46 * var(--u));
-  border-radius: 50%;
-  background: var(--ink);
-  color: #fff;
-}
-
-.live .ask-pill .go svg {
-  width: calc(20 * var(--u));
-}
-
 /* The day chart: the line draws itself, the fill follows, and "now" pulses. */
 .live .h-chart {
   position: relative;
@@ -708,10 +637,6 @@
   background: var(--lime);
 }
 
-.live .home .ask-pill {
-  margin-top: calc(10 * var(--u));
-}
-
 .live .h-peek {
   flex: none;
   height: calc(120 * var(--u));
@@ -854,7 +779,6 @@
   font-weight: 300;
 }
 
-.live .blocks .ask-pill,
 .live .blocks .seg {
   margin-top: calc(12 * var(--u));
 }

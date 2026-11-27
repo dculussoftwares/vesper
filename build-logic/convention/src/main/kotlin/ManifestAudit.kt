@@ -28,6 +28,7 @@ object ManifestAudit {
     private const val BLOCKING_SERVICE = "com.dculus.vesper.core.blocking.standard.BlockingService"
     private const val FGS_SPECIAL_USE = "android.permission.FOREGROUND_SERVICE_SPECIAL_USE"
     private const val FGS_SUBTYPE_PROPERTY = "android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+    private const val AI_SDK_REGISTRAR = "com.google.firebase.ai.FirebaseAIRegistrar"
 
     fun auditManifest(
         xml: String,
@@ -37,6 +38,9 @@ object ManifestAudit {
         val violations = mutableListOf<String>()
         val permissions = root.names("uses-permission") + root.names("uses-permission-sdk-23")
         FORBIDDEN_PERMISSIONS.filter { it in permissions }.forEach { violations += "forbidden permission $it" }
+
+        // AI is off in both apps: Gemini's terms exclude under-18s. The SDK registers itself in the merged manifest.
+        if (AI_SDK_REGISTRAR in xml) violations += "the Firebase AI SDK must not be included"
 
         val application = root.children("application").firstOrNull()
         val services = application?.children("service").orEmpty()

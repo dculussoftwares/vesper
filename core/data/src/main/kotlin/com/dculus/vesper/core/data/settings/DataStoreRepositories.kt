@@ -23,7 +23,6 @@ private object Keys {
     val onboardingComplete = booleanPreferencesKey("onboardingComplete")
     val accountSkipped = booleanPreferencesKey("accountSkipped")
     val accessibilityConsentAt = longPreferencesKey("accessibilityConsentAt")
-    val aiEnabled = booleanPreferencesKey("aiEnabled")
     val usageWarningGlow = booleanPreferencesKey("usageWarningGlow")
     val appStartTimer = booleanPreferencesKey("appStartTimer")
     val breakStartedAt = longPreferencesKey("breakSession.startedAt")
@@ -67,7 +66,6 @@ internal class DataStoreSettingsRepository
                         focusSession = prefs.focusSession(),
                         allLocked = prefs[Keys.allLocked] ?: false,
                         accessibilityConsentAt = prefs[Keys.accessibilityConsentAt]?.let(Instant::ofEpochMilli),
-                        aiEnabled = prefs[Keys.aiEnabled] ?: false,
                         usageWarningGlow = prefs[Keys.usageWarningGlow] ?: true,
                         appStartTimer = prefs[Keys.appStartTimer] ?: true,
                     )
@@ -112,10 +110,6 @@ internal class DataStoreSettingsRepository
                     prefs[Keys.accessibilityConsentAt] = at.toEpochMilli()
                 }
             }
-        }
-
-        override suspend fun setAiEnabled(enabled: Boolean) {
-            store.edit { it[Keys.aiEnabled] = enabled }
         }
 
         override suspend fun setUsageWarningGlow(enabled: Boolean) {

@@ -20,6 +20,9 @@ gradient "glow" cards with grain, dot-matrix numbers, tick-ruler sliders, a floa
 **extras**, handled in epic M13 (§7). Copy in v5 is final: take strings verbatim from the prototype. Sample data in the
 prototype (`Sam`, `Aarav's phone`, `Pixel 7a`, `Sunday, 18 October`, the minute values) is placeholder: bind real data.
 
+> **AI removed (November 2026):** neither app has an AI feature, because Gemini's API terms exclude under-18s. Ignore
+> "Describe with AI", the AI pill, the AI button and the AI draft banner in this spec and in the prototype.
+
 ## 1. Reading the prototype
 
 Screen → lines in `Stay Focused v5.dc.html` → reference PNG → `start=` key:

@@ -31,7 +31,6 @@
     <string name="break_tile_running_title">On a\nbreak</string>
     <string name="break_tile_end_early">Tap to end early</string>
     <string name="break_tile_idle_description">Take a break</string>
-    <string name="home_ai_pill">Describe a block in your words</string>
 
     <!-- Child card (v5) -->
     <string name="home_child_today">Today</string>

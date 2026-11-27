@@ -119,8 +119,6 @@ class FakeSettingsRepository(
 
     override suspend fun setAccessibilityConsentAt(at: Instant?) = state.update { it.copy(accessibilityConsentAt = at) }
 
-    override suspend fun setAiEnabled(enabled: Boolean) = state.update { it.copy(aiEnabled = enabled) }
-
     override suspend fun setUsageWarningGlow(enabled: Boolean) = state.update { it.copy(usageWarningGlow = enabled) }
 
     override suspend fun setAppStartTimer(enabled: Boolean) = state.update { it.copy(appStartTimer = enabled) }

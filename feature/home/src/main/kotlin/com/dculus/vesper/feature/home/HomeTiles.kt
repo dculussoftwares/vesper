@@ -38,14 +38,12 @@ import androidx.compose.ui.unit.sp
 import com.dculus.vesper.core.ui.art.BreakArt
 import com.dculus.vesper.core.ui.components.ActionTile
 import com.dculus.vesper.core.ui.components.AppIconTile
-import com.dculus.vesper.core.ui.components.DescribeRow
 import com.dculus.vesper.core.ui.components.Numeral
 import com.dculus.vesper.core.ui.icons.V5Icons
 import com.dculus.vesper.core.ui.theme.V5Gradients
 import com.dculus.vesper.core.ui.theme.VesperTheme
 
 internal const val HOME_NEW_BLOCK_TAG = "home_new_block"
-internal const val HOME_AI_DESCRIBE_TAG = "home_ai_describe"
 internal const val HOME_ACTIVE_BLOCKS_TAG = "home_active_blocks"
 internal const val BREAK_IDLE_CARD_TAG = "home_break_idle_card"
 internal const val BREAK_ACTIVE_CARD_TAG = "home_break_active_card"
@@ -193,13 +191,4 @@ private fun BreakCountdown(breakUi: () -> BreakUi) {
         color = VesperTheme.colors.onGradient,
         modifier = Modifier.testTag(BREAK_COUNTDOWN_TAG),
     )
-}
-
-/** White pill that opens "Describe with AI". */
-@Composable
-internal fun AiPill(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    DescribeRow(stringResource(R.string.home_ai_pill), onClick, modifier.testTag(HOME_AI_DESCRIBE_TAG))
 }

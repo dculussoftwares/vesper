@@ -54,12 +54,9 @@ class CreateBlockFlowTest {
                 SavedStateHandle(),
                 FakeTargetApps(defaultApps()),
                 FakeLinkedDevicesRepository(),
-                settings,
                 blocks,
                 noDeviceBlocks(),
                 TestClock(),
-                AiDraftHandoff(),
-                FakeAiReporter(),
             )
         val installed =
             object : InstalledAppsRepository {
@@ -179,36 +176,5 @@ class CreateBlockFlowTest {
         composeRule.onNodeWithText("Continue with 2 apps").performClick()
         composeRule.onNodeWithTag(WIZARD_RANGE_CUSTOM_TAG).performClick()
         composeRule.onNodeWithTag(TIME_PICKER_TAG).assertExists()
-    }
-
-    @Test
-    fun aiDraftShowsTheBannerAndTheCheckTitle() {
-        val vm =
-            WizardViewModel(
-                SavedStateHandle(),
-                FakeTargetApps(defaultApps()),
-                FakeLinkedDevicesRepository(),
-                FakeSettingsRepository(),
-                blocks,
-                noDeviceBlocks(),
-                TestClock(),
-                AiDraftHandoff(),
-                FakeAiReporter(),
-            )
-        vm.openAiDraft(BlockDraft(aiNote = "Instagram for 30 minutes a day."))
-        composeRule.setContent {
-            CompositionLocalProvider(LocalInspectionMode provides true) {
-                VesperTheme {
-                    val state by vm.state.collectAsState()
-                    WizardScreen(state, WizardActions(onChangeType = vm::changeType))
-                }
-            }
-        }
-        composeRule.onNodeWithText("Set the rule").assertExists()
-        composeRule.onNodeWithText("AI draft").assertExists()
-        composeRule.onNodeWithText("Instagram for 30 minutes a day.").assertExists()
-        composeRule.onNodeWithText("Change").performClick()
-        composeRule.onNodeWithText("Rather describe it in words").assertDoesNotExist()
-        composeRule.onNodeWithTag(wizardTypeTag(BlockType.LIMIT)).assertExists()
     }
 }

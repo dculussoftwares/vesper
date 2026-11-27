@@ -2,8 +2,8 @@
 
 Answers for the Play Console "Data safety" form, one section per app. Reviewed against the Firestore schema
 (`docs/IMPLEMENTATION_PLAN.md` section 7) and the SDKs the apps include (Firebase Auth, Cloud Firestore, Cloud
-Messaging, App Check with Play Integrity, AI Logic). Public policy: https://vesper.dculus.com/privacy (`web/src/pages/privacy.astro`).
-**Release gate:** several features described here (sign-in, linking, usage sync, AI Logic, report-a-bad-result, web
+Messaging, App Check with Play Integrity). Public policy: https://vesper.dculus.com/privacy (`web/src/pages/privacy.astro`).
+**Release gate:** several features described here (sign-in, linking, usage sync, web
 deletion) land in later milestones. Before the first public release, verify each row against the shipped code and
 remove anything not shipped. Re-check this file whenever a Firebase SDK or a Firestore field is added.
 
@@ -19,7 +19,7 @@ Common to both apps
 
 ## Vesper (parent / main app)
 
-Collection is optional: with no account nothing leaves the device, except an AI sentence if the user uses that feature.
+Collection is optional: with no account nothing leaves the device.
 
 | Play category | Data type | Collected | Shared | Optional | Purpose |
 |---|---|---|---|---|---|
@@ -27,7 +27,6 @@ Collection is optional: with no account nothing leaves the device, except an AI 
 | Personal info | Name (display name) | Yes | No | Yes (account) | Account management |
 | Personal info | User IDs (Firebase uid) | Yes | No | Yes | Account management, App functionality |
 | Device or other IDs | FCM token, Firebase installation ID | Yes | No | Yes | App functionality |
-| App activity | Other user-generated content (the AI sentence; processed by Firebase AI Logic / Gemini; stored only if the user confirms "Report a bad result") | Yes | No | Yes | App functionality |
 | App activity | Other actions (blocks, limits, schedules set while signed in and linked) | Yes | No | Yes | App functionality |
 
 Not collected: location, contacts, messages, photos/videos, audio, files, calendar, health, financial info, web
@@ -46,7 +45,7 @@ The child app only works linked to a parent. The data below goes to the linked p
 | App activity | Other actions (battery level, charging state, Android version, online/last-seen time, requests for more time, permission-lost alerts; Play has no "device info" category) | Yes | No | No | App functionality |
 | Personal info | User IDs (child uid) | Yes | No | No | App functionality |
 
-The AI feature is not in the child app.
+Neither app has an AI feature or SDK (`verifyManifests` fails if the Firebase AI SDK gets in).
 
 Notes
 - The installed-apps list is declared; the app must not use `QUERY_ALL_PACKAGES` (launcher-intent query only).

@@ -62,12 +62,9 @@ class WizardViewModelTest {
             handle,
             apps,
             devices,
-            settings,
             blocks,
             noDeviceBlocks(deviceRepo),
             clock,
-            AiDraftHandoff(),
-            FakeAiReporter(),
         )
     }
 
@@ -204,16 +201,6 @@ class WizardViewModelTest {
         }
 
     @Test
-    fun describeWithAiEmitsAnEvent() =
-        kotlinx.coroutines.test.runTest {
-            val vm = viewModel()
-            vm.events.test {
-                vm.describeWithAi()
-                assertEquals(WizardEvent.DescribeWithAi(target = null), awaitItem())
-            }
-        }
-
-    @Test
     fun linkedDevicesAreListedAndEnabled() {
         devices.devices.value = listOf(device())
         val targets = viewModel().state.value.targets
@@ -281,15 +268,6 @@ class WizardViewModelTest {
         }
 
     @Test
-    fun aiShortcutFollowsTheAiSetting() =
-        kotlinx.coroutines.test.runTest {
-            val vm = viewModel()
-            assertFalse(vm.state.value.aiAvailable)
-            settings.setAiEnabled(true)
-            assertTrue(vm.state.value.aiAvailable)
-        }
-
-    @Test
     fun continueIsIgnoredWhileLoading() {
         val pending = MutableSharedFlow<List<TargetApp>>()
         val loading =
@@ -301,12 +279,9 @@ class WizardViewModelTest {
                 SavedStateHandle(),
                 loading,
                 devices,
-                settings,
                 blocks,
                 noDeviceBlocks(deviceRepo),
                 clock,
-                AiDraftHandoff(),
-                FakeAiReporter(),
             )
         assertFalse(vm.state.value.ready)
         vm.next()
@@ -327,12 +302,9 @@ class WizardViewModelTest {
                 handle,
                 perTarget,
                 devices,
-                settings,
                 blocks,
                 noDeviceBlocks(deviceRepo),
                 clock,
-                AiDraftHandoff(),
-                FakeAiReporter(),
             )
         assertEquals(WIZARD_STEP_APPS, vm.state.value.step)
         vm.pickType(BlockType.NOW)

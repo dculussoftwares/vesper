@@ -33,12 +33,9 @@ class EditBlockTest {
             handle,
             FakeTargetApps(defaultApps()),
             FakeLinkedDevicesRepository(),
-            FakeSettingsRepository(),
             blocks,
             noDeviceBlocks(),
             TestClock(),
-            AiDraftHandoff(),
-            FakeAiReporter(),
         )
     }
 
@@ -106,12 +103,9 @@ class EditBlockTest {
                     handle,
                     FakeTargetApps(defaultApps()),
                     FakeLinkedDevicesRepository(),
-                    FakeSettingsRepository(),
                     blocks,
                     noDeviceBlocks(),
                     TestClock(),
-                    AiDraftHandoff(),
-                    FakeAiReporter(),
                 )
             vm.events.test {
                 vm.deleteBlock()

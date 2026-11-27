@@ -60,36 +60,6 @@ function typeOnce(el: HTMLElement, stops: Stop[]) {
   later(stops, Number(el.dataset.delay ?? 600), next);
 }
 
-/**
- * `data-type-loop='["…","…"]'`: a placeholder that takes turns with typed example sentences, like the home screen's
- * "Describe a block in your words" box. Expects `.ph` (placeholder) and `.tx` (typed text) children.
- */
-function typeLoop(el: HTMLElement, stops: Stop[]) {
-  if (reduced()) return;
-  const lines = JSON.parse(el.dataset.typeLoop ?? "[]") as string[];
-  const tx = el.querySelector<HTMLElement>(".tx");
-  if (!tx || !lines.length) return;
-  let line = 0;
-  const cycle = () => {
-    const text = lines[line++ % lines.length]!;
-    let i = 0;
-    el.classList.add("typing");
-    tx.textContent = "";
-    const type = () => {
-      tx.textContent = text.slice(0, ++i);
-      if (i < text.length) later(stops, 40 + Math.random() * 60, type);
-      else
-        later(stops, 2200, () => {
-          el.classList.remove("typing");
-          tx.textContent = "";
-          later(stops, 2400, cycle);
-        });
-    };
-    later(stops, 300, type);
-  };
-  later(stops, Number(el.dataset.delay ?? 2600), cycle);
-}
-
 /** `data-countdown="292"`: a m:ss clock that counts down every second and starts again at 5:00. */
 function countdown(el: HTMLElement, stops: Stop[]) {
   let left = Number(el.dataset.countdown);
@@ -115,7 +85,6 @@ export function play(screen: HTMLElement) {
   screen.classList.add("play");
   screen.querySelectorAll<HTMLElement>("[data-count]").forEach((el) => countUp(el, stops));
   screen.querySelectorAll<HTMLElement>("[data-type]").forEach((el) => typeOnce(el, stops));
-  screen.querySelectorAll<HTMLElement>("[data-type-loop]").forEach((el) => typeLoop(el, stops));
   screen.querySelectorAll<HTMLElement>("[data-countdown]").forEach((el) => countdown(el, stops));
   running.set(screen, stops);
 }
