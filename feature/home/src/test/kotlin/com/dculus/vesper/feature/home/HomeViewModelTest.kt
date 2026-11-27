@@ -398,7 +398,7 @@ class HomeViewModelTest {
             val vm = viewModel(VirtualClock(testScheduler), env)
             vm.state.test {
                 assertEquals(false, latest(testScheduler).aiAvailable)
-                env.settings.setAiEnabled(true)
+                env.settings.setAiAgeAnswer(true)
                 assertEquals(true, latest(testScheduler).aiAvailable)
             }
         }

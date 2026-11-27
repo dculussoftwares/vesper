@@ -18,7 +18,7 @@ Set the rules you want and let the app hold you to them:
 
 See where your time goes: a screen-time gauge, hourly bars, and counts of launches, unlocks and blocked attempts.
 
-Describe a block in your own words (optional AI): type a sentence about what to limit and when, and the app drafts the
+Describe a block in your own words (optional AI, 18 and over): type a sentence about what to limit and when, and the app drafts the
 block for you. The draft is only a suggestion. It is marked "AI DRAFT" and nothing turns on until you check it and confirm.
 Your sentence is sent to Google's Gemini model through Firebase AI Logic to produce the draft.
 

@@ -187,7 +187,7 @@ class BlockViewModelTest {
         runTest {
             val vm = viewModel()
             assertFalse(vm.state.value.aiAvailable)
-            settings.setAiEnabled(true)
+            settings.setAiAgeAnswer(true)
             assertTrue(vm.state.value.aiAvailable)
         }
 

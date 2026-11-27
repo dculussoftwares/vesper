@@ -25,6 +25,9 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import java.time.Clock
+import java.time.Instant
+import java.time.YearMonth
+import java.time.ZoneOffset
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -50,6 +53,44 @@ class AccountViewModelTest {
     fun tearDown() = Dispatchers.resetMain()
 
     @Test
+    fun anAdultBirthDateTurnsAiOn() = aiAnswer(YearMonth.of(1990, 5), expected = true)
+
+    @Test
+    fun anUnder18BirthDateKeepsAiOffAndCannotBeRetried() = aiAnswer(YearMonth.of(2015, 5), expected = false)
+
+    private fun aiAnswer(
+        birth: YearMonth,
+        expected: Boolean,
+    ) = runTest {
+        val auth = FakeAuthRepository()
+        val settings = FakeSettingsRepository()
+        val viewModel =
+            AccountViewModel(
+                auth,
+                FakePermissions(),
+                EngineHealthMonitor(Clock.systemUTC()),
+                FakeAccountDeletionRepository(auth) {},
+                settings,
+                Clock.fixed(Instant.parse("2026-11-15T00:00:00Z"), ZoneOffset.UTC),
+            )
+        viewModel.answerAiAge(birth)
+        viewModel.answerAiAge(YearMonth.of(1970, 1))
+        val saved = settings.settings.first()
+        assertTrue(saved.aiAgeAnswered)
+        assertEquals(expected, saved.aiEnabled)
+    }
+
+    @Test
+    fun birthMonthIsOnlyAcceptedWhenComplete() {
+        val now = YearMonth.of(2026, 11)
+        assertEquals(YearMonth.of(2000, 3), birthMonthOrNull("3", "2000", now))
+        assertNull(birthMonthOrNull("13", "2000", now))
+        assertNull(birthMonthOrNull("3", "20", now))
+        assertNull(birthMonthOrNull("12", "2026", now))
+        assertNull(birthMonthOrNull("", "2000", now))
+    }
+
+    @Test
     fun skippedSignInHasNoUser() =
         runTest {
             val auth = FakeAuthRepository()
@@ -60,6 +101,7 @@ class AccountViewModelTest {
                     EngineHealthMonitor(Clock.systemUTC()),
                     FakeAccountDeletionRepository(auth) {},
                     FakeSettingsRepository(),
+                    Clock.systemUTC(),
                 )
             viewModel.state.test {
                 var item = awaitItem()
@@ -81,6 +123,7 @@ class AccountViewModelTest {
                     EngineHealthMonitor(Clock.systemUTC()),
                     FakeAccountDeletionRepository(auth) {},
                     settings,
+                    Clock.systemUTC(),
                 )
             viewModel.state.test {
                 var item = awaitItem()
@@ -112,6 +155,7 @@ class AccountViewModelTest {
                     engine,
                     FakeAccountDeletionRepository(auth) {},
                     FakeSettingsRepository(),
+                    Clock.systemUTC(),
                 )
             viewModel.state.test {
                 var item = awaitItem()
@@ -148,6 +192,7 @@ class AccountViewModelTest {
                 EngineHealthMonitor(Clock.systemUTC()),
                 deletion,
                 FakeSettingsRepository(),
+                Clock.systemUTC(),
             )
     }
 

@@ -1,5 +1,6 @@
 package com.dculus.vesper.core.sync
 
+import com.dculus.vesper.core.data.repository.SettingsRepository
 import com.dculus.vesper.core.model.AiBlockResult
 import com.dculus.vesper.core.model.AiNormalizer
 import com.dculus.vesper.core.model.AppInfo
@@ -7,6 +8,7 @@ import com.dculus.vesper.core.model.BlockDraft
 import com.dculus.vesper.core.model.BlockTarget
 import com.dculus.vesper.core.model.LocalBlockParser
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
 import javax.inject.Inject
@@ -30,19 +32,24 @@ interface BlockDescriber {
 class AiBlockBuilder
     internal constructor(
         private val model: AiModel,
-        private val isConfigured: () -> Boolean,
+        private val canUseModel: suspend () -> Boolean,
         private val timeoutMs: Long,
     ) : BlockDescriber {
         @Inject
-        internal constructor(model: AiModel, availability: FirebaseAvailability) :
-            this(model, { availability.isConfigured }, AiPrompt.TIMEOUT_MS)
+        internal constructor(model: AiModel, availability: FirebaseAvailability, settings: SettingsRepository) :
+            this(
+                model,
+                // Checked here too, so no entry point can send a sentence to Gemini for someone not confirmed 18+.
+                { availability.isConfigured && settings.settings.first().aiEnabled },
+                AiPrompt.TIMEOUT_MS,
+            )
 
         override suspend fun build(
             sentence: String,
             installed: List<AppInfo>,
             target: BlockTarget,
         ): BlockDraft {
-            val result = if (isConfigured()) fromModel(sentence) else null
+            val result = if (canUseModel()) fromModel(sentence) else null
             return if (result != null) {
                 AiNormalizer.normalize(result, sentence, installed, target)
             } else {

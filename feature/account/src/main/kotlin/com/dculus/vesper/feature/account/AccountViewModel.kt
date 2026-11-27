@@ -8,6 +8,7 @@ import com.dculus.vesper.core.blocking.engine.EngineHealthMonitor
 import com.dculus.vesper.core.blocking.permissions.PermissionsRepository
 import com.dculus.vesper.core.data.repository.SettingsRepository
 import com.dculus.vesper.core.model.Permissions
+import com.dculus.vesper.core.model.isOldEnoughForAi
 import com.dculus.vesper.core.sync.AccountDeletionRepository
 import com.dculus.vesper.core.sync.AuthFailure
 import com.dculus.vesper.core.sync.AuthRepository
@@ -26,6 +27,8 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.time.Clock
+import java.time.YearMonth
 import javax.inject.Inject
 
 /** What the account screen shows. [user] is null when the person skipped sign-in. */
@@ -40,6 +43,8 @@ internal data class AccountUiState(
     val warningGlow: Boolean = true,
     /** Whether a timer with the time left shows as a limited app opens. */
     val appTimer: Boolean = true,
+    /** The AI age question: null until answered, then whether the AI block builder is on. */
+    val aiAllowed: Boolean? = null,
     /** True while a sign-out is in flight, so the button shows its spinner. */
     val signingOut: Boolean = false,
 )
@@ -92,6 +97,7 @@ class AccountViewModel
         engine: EngineHealthMonitor,
         private val deletion: AccountDeletionRepository,
         private val settings: SettingsRepository,
+        private val clock: Clock,
     ) : ViewModel() {
         private val signingOut = MutableStateFlow(false)
         private val deleteState = MutableStateFlow(DeleteUiState())
@@ -112,6 +118,7 @@ class AccountViewModel
                     authLoaded = true,
                     warningGlow = prefs.usageWarningGlow,
                     appTimer = prefs.appStartTimer,
+                    aiAllowed = prefs.aiEnabled.takeIf { prefs.aiAgeAnswered },
                     signingOut = busy,
                 )
             }.stateIn(
@@ -130,6 +137,11 @@ class AccountViewModel
 
         fun setAppTimer(enabled: Boolean) {
             viewModelScope.launch { settings.setAppStartTimer(enabled) }
+        }
+
+        /** Only whether this makes the person an adult is saved; [birth] is dropped here. */
+        fun answerAiAge(birth: YearMonth) {
+            viewModelScope.launch { settings.setAiAgeAnswer(isOldEnoughForAi(birth, YearMonth.now(clock))) }
         }
 
         /** Signs out. Blocks stay on this device; nothing else is stored per account yet (cached devices: M7). */

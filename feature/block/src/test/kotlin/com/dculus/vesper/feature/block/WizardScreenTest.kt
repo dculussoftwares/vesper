@@ -32,7 +32,7 @@ class WizardScreenTest {
 
     private fun launch() {
         val settings = FakeSettingsRepository()
-        kotlinx.coroutines.runBlocking { settings.setAiEnabled(true) }
+        kotlinx.coroutines.runBlocking { settings.setAiAgeAnswer(true) }
         val vm =
             WizardViewModel(
                 SavedStateHandle(),

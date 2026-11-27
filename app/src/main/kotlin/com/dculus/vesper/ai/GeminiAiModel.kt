@@ -1,5 +1,7 @@
-package com.dculus.vesper.core.sync
+package com.dculus.vesper.ai
 
+import com.dculus.vesper.core.sync.AiModel
+import com.dculus.vesper.core.sync.AiPrompt
 import com.google.firebase.Firebase
 import com.google.firebase.ai.GenerativeModel
 import com.google.firebase.ai.ai

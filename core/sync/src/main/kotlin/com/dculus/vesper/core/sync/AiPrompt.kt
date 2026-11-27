@@ -1,7 +1,7 @@
 package com.dculus.vesper.core.sync
 
 /** Gemini settings for the AI block builder. Only the user's sentence is sent; never installed apps or other data. */
-internal object AiPrompt {
+object AiPrompt {
     /** Current Gemini Flash model on the Gemini Developer API behind Firebase AI Logic. */
     const val MODEL_NAME = "gemini-3.5-flash"
 

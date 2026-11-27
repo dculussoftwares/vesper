@@ -191,6 +191,7 @@ class AppNavigationTest {
             EngineHealthMonitor(Clock.systemUTC()),
             FakeAccountDeletionRepository(accountAuth) {},
             FakeSettingsRepository(),
+            Clock.systemUTC(),
         )
     private val homeViewModel =
         HomeViewModel(

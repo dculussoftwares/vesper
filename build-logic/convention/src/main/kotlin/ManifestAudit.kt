@@ -28,6 +28,7 @@ object ManifestAudit {
     private const val BLOCKING_SERVICE = "com.dculus.vesper.core.blocking.standard.BlockingService"
     private const val FGS_SPECIAL_USE = "android.permission.FOREGROUND_SERVICE_SPECIAL_USE"
     private const val FGS_SUBTYPE_PROPERTY = "android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+    private const val AI_SDK_REGISTRAR = "com.google.firebase.ai.FirebaseAIRegistrar"
 
     fun auditManifest(
         xml: String,
@@ -52,6 +53,8 @@ object ManifestAudit {
             }
 
             AppRole.KIDS -> {
+                // Gemini's terms exclude apps for under-18s; the SDK registers itself in the merged manifest.
+                if (AI_SDK_REGISTRAR in xml) violations += ":kids must not include the Firebase AI SDK"
                 if (monitoringFlag != "child_monitoring") {
                     violations += ":kids must declare isMonitoringTool=child_monitoring"
                 }

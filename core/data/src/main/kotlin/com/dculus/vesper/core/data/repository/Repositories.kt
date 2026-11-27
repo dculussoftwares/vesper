@@ -77,7 +77,8 @@ interface SettingsRepository {
 
     suspend fun setAccessibilityConsentAt(at: Instant?)
 
-    suspend fun setAiEnabled(enabled: Boolean)
+    /** Saves the answer to the AI age question; only the first answer counts. The birth date is never stored. */
+    suspend fun setAiAgeAnswer(isAdult: Boolean)
 
     suspend fun setUsageWarningGlow(enabled: Boolean)
 

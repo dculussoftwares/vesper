@@ -22,7 +22,7 @@ reviewed by CodeRabbit**. This document is the shared contract all changes refer
 | Build | Gradle version catalog (`gradle/libs.versions.toml`) + convention plugins in `build-logic/` |
 | Packages | `com.dculus.vesper` (main app), `com.dculus.vesper.kids` (Kids app) |
 | Two apps | `:app` = self-control + parent. `:kids` = child companion (carries `IsMonitoringTool`, FGS `specialUse`, persistent notification) |
-| Accounts | **Optional.** "Continue without an account" on sign-in. Self-blocking and AI work with no account; an account is needed only to link a child's phone. The child phone has no account (Firebase Anonymous Auth under the hood) |
+| Accounts | **Optional.** "Continue without an account" on sign-in. Self-blocking and AI (18+, after a one-time birth month and year question; the Gemini client lives in `:app`, never in Kids) work with no account; an account is needed only to link a child's phone. The child phone has no account (Firebase Anonymous Auth under the hood) |
 | Backend | **Firebase-first**: Auth, Firestore + security rules, App Check, FCM, AI Logic (Gemini). Client SDKs talk to Firebase directly; **Cloud Functions (TypeScript, 2nd gen, Blaze plan) only where security or clean architecture needs them** (7 functions, see §8). Lives in `/firebase` |
 | Infrastructure | **Only Terraform, applied by GitHub Actions** (state in a GCS bucket), for GitHub (repo settings) and GCP/Firebase, in one prod project. See `docs/INFRASTRUCTURE.md` |
 | Open source | GPL-3.0. Forks bring their own `google-services.json`; the app **must build and run without it** (Firebase features disabled) |
@@ -43,7 +43,7 @@ reviewed by CodeRabbit**. This document is the shared contract all changes refer
 :core:data                 Room DB, DAOs, DataStore, repositories                                   → core:model
 :core:usage                UsageStatsManager queries, installed-apps catalog, aggregation           → core:model, core:data
 :core:blocking             AccessibilityService, rule evaluator, engine, block screen                → core:model, core:data, core:usage, core:ui
-:core:sync                 Firebase Auth, Firestore, FCM, AI Logic wrappers                          → core:model, core:data
+:core:sync                 Firebase Auth, Firestore, FCM, AI builder (no AI SDK)                          → core:model, core:data
 :feature:onboarding        Welcome, sign-in, permissions, disclosure
 :feature:home              Home dashboard, Take a break sheet
 :feature:block             Block tab, wizard, templates, All apps, AI describe

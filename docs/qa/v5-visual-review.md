@@ -124,11 +124,9 @@ gate under 5 minutes):
 Existing smoke flows (`smoke/*`) are unchanged and still match the v5 copy.
 
 The flows were run on the CI emulator (`e2e` workflow on this branch). That run showed:
-- **F3 (finding, follow-up):** the "Describe a block" entry points (Home pill, Blocks "New block" card, wizard "Rather
-  describe it in words") are shown only when `AppSettings.aiEnabled` is true, and nothing in the app sets it
-  (`setAiEnabled` has no caller outside tests; `HomeViewModel.initialState` also hard-codes `aiAvailable = false`). A user
-  therefore never reaches Describe with AI, and no journey can drive it. Needs a decision: a settings toggle (Account) or
-  default on. Once an entry point exists, add `journeys/describe_with_ai.yaml` (type a sentence, assert the wizard rule card
-  and the "Check the details, then turn it on." banner; CI has no Firebase config so it exercises the on-device parser).
+- **F3 (resolved):** nothing set `AppSettings.aiEnabled`, so Describe with AI could not be reached. Account, "AI block
+  drafts" now asks for the birth month and year once and turns it on for adults only (Gemini's terms exclude under-18s).
+  Still open: add `journeys/describe_with_ai.yaml` (answer as an adult, type a sentence, assert the wizard rule card and
+  the "Check the details, then turn it on." banner; CI has no Firebase config so it exercises the on-device parser).
 - Insights on a fresh emulator has no usage data, so the hero card is replaced by "No data for this day"; the flow asserts
   that state and the Day/Week switch, not the hero numbers.

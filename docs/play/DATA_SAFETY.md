@@ -46,7 +46,8 @@ The child app only works linked to a parent. The data below goes to the linked p
 | App activity | Other actions (battery level, charging state, Android version, online/last-seen time, requests for more time, permission-lost alerts; Play has no "device info" category) | Yes | No | No | App functionality |
 | Personal info | User IDs (child uid) | Yes | No | No | App functionality |
 
-The AI feature is not in the child app.
+The AI feature and its SDK are not in the child app (`verifyManifests` fails if the SDK gets in). In Vesper it is for
+18 and over: the birth month and year are asked once, compared on the phone and never stored or sent.
 
 Notes
 - The installed-apps list is declared; the app must not use `QUERY_ALL_PACKAGES` (launcher-intent query only).

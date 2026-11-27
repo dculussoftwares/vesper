@@ -11,6 +11,16 @@
     <string name="account_warning_glow_hint">Glow along the screen edges when a limit is nearly up.</string>
     <string name="account_app_timer">App timer</string>
     <string name="account_app_timer_hint">Show the time left when you open a limited app.</string>
+    <!-- Shipped extras (not in the v5 prototype): the AI block builder's age question. -->
+    <string name="account_ai_title">AI block drafts</string>
+    <string name="account_ai_set_up">Tap to set up describing a block in your own words.</string>
+    <string name="account_ai_on">On. Describe a block from Home or Blocks.</string>
+    <string name="account_ai_unavailable">Not available for your age. You can still create blocks yourself.</string>
+    <string name="account_ai_age_title">When were you born?</string>
+    <string name="account_ai_age_body">We ask once to set up AI block drafts. Your birth date is not saved or sent anywhere.</string>
+    <string name="account_ai_age_month">Month (1 to 12)</string>
+    <string name="account_ai_age_year">Year (4 digits)</string>
+    <string name="account_ai_age_continue">Continue</string>
     <string name="account_perm_usage">Usage access</string>
     <string name="account_perm_accessibility">Accessibility</string>
     <string name="account_perm_overlay">Display over apps</string>
