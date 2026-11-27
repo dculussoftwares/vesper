@@ -93,6 +93,39 @@ class PermissionWatcherTest {
         }
 
     @Test
+    fun aPermissionLostDuringTheWaitGetsItsOwnConfirmWait() =
+        runTest {
+            check()
+            current = granted.copy(accessibility = false)
+            val pending = launch { check() }
+            advanceTimeBy(1)
+            current = granted.copy(accessibility = false, usage = false)
+            pending.join()
+            assertEquals(listOf(AlertPermission.ACCESSIBILITY), alerts.calls)
+            check()
+            assertEquals(listOf(AlertPermission.ACCESSIBILITY, AlertPermission.USAGE), alerts.calls)
+        }
+
+    @Test
+    fun aRaisedPermissionSeenRestoredBeforeTheWaitAlertsAgain() =
+        runTest {
+            check()
+            current = granted.copy(accessibility = false)
+            check()
+            // Accessibility is back at the first read, then off again while usage is being confirmed.
+            current = granted.copy(usage = false)
+            val pending = launch { check() }
+            advanceTimeBy(1)
+            current = granted.copy(accessibility = false, usage = false)
+            pending.join()
+            check()
+            assertEquals(
+                listOf(AlertPermission.ACCESSIBILITY, AlertPermission.USAGE, AlertPermission.ACCESSIBILITY),
+                alerts.calls,
+            )
+        }
+
+    @Test
     fun everyLostPermissionGetsItsOwnAlert() =
         runTest {
             check()

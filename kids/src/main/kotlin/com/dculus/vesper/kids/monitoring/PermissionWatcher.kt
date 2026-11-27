@@ -119,18 +119,13 @@ class PermissionWatcher
             target: DeviceTarget,
             state: WatchState,
         ) {
-            var lost = lostPermissions(checks.read())
-            val known = history.everGranted()
-            if (lost.any { it in known && it !in state.raised }) {
+            var tampered = readTampered(state)
+            val unconfirmed = tampered.filterNot { it in state.raised }.toSet()
+            if (unconfirmed.isNotEmpty()) {
                 delay(LOSS_CONFIRM_MILLIS)
-                lost = lostPermissions(checks.read())
+                // Only what was off in both reads: one lost during the wait gets its own wait at the next check.
+                tampered = readTampered(state).filter { it in unconfirmed }
             }
-            val granted = ALL_PERMISSIONS - lost.toSet()
-            history.markGranted(granted)
-            state.sawGranted += granted
-            val tampered = lost.filter { it in history.everGranted() }
-            // A permission that came back may be lost again later: that is a new alert.
-            state.raised.retainAll(tampered.toSet())
             for (permission in tampered) {
                 if (permission in state.raised) continue
                 try {
@@ -143,6 +138,20 @@ class PermissionWatcher
                     Timber.w(e, "Reporting a lost permission failed; will retry")
                 }
             }
+        }
+
+        /**
+         * Reads the permissions, remembers the granted ones and returns the lost ones. Every read updates [state], so a
+         * permission seen back, even during the confirm wait, counts as a new loss if it goes off again.
+         */
+        private fun readTampered(state: WatchState): List<String> {
+            val lost = lostPermissions(checks.read())
+            val granted = ALL_PERMISSIONS - lost.toSet()
+            history.markGranted(granted)
+            state.sawGranted += granted
+            val tampered = lost.filter { it in history.everGranted() }
+            state.raised.retainAll(tampered.toSet())
+            return tampered
         }
 
         private companion object {
