@@ -77,4 +77,8 @@
     <string name="kids_monitoring_channel">Managed by parent</string>
     <string name="kids_monitoring_channel_description">Always shown while this phone is linked to a parent.</string>
     <string name="kids_monitoring_use_case">Shows a persistent notification and shares screen time with the parent this phone is linked to, until the child or parent unlinks it. Runs only while linked.</string>
+
+    <!-- Block screen: overrides of :core:blocking. On this phone every rule comes from the parent, never from "you". -->
+    <string name="block_reason_manual_lock">Your parent locked this app.</string>
+    <string name="block_cycle_rule">Your parent\'s rule: %1$d min open, then %2$d min locked. You used your %3$d minutes.</string>
 </resources>

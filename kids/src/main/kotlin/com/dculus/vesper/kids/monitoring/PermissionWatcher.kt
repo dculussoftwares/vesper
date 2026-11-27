@@ -62,6 +62,9 @@ internal class SharedPreferencesPermissionHistory
         }
     }
 
+/** How long a permission must stay off before the parent is told, in case Android only reports it off briefly. */
+internal const val LOSS_CONFIRM_MILLIS = 10_000L
+
 /** What one run of the watcher remembers between checks. */
 internal class WatchState {
     /** Permissions already announced while they stay off. */
@@ -74,7 +77,8 @@ internal class WatchState {
 /**
  * Tells the parent when this phone loses a permission blocking depends on. It checks on every heartbeat and straight
  * away when the accessibility service binds or unbinds. A permission that was never granted is not "lost" and raises
- * nothing. A loss the watcher saw happen is always announced; a permission only found off (after a restart) is
+ * nothing. A new loss is read again after [LOSS_CONFIRM_MILLIS] and ignored if it is back. A loss that lasts is
+ * announced when the watcher saw it happen; a permission only found off (after a restart) is
  * announced unless an alert for it is still open. A failed write is tried again at the next check.
  */
 class PermissionWatcher
@@ -115,7 +119,12 @@ class PermissionWatcher
             target: DeviceTarget,
             state: WatchState,
         ) {
-            val lost = lostPermissions(checks.read())
+            var lost = lostPermissions(checks.read())
+            val known = history.everGranted()
+            if (lost.any { it in known && it !in state.raised }) {
+                delay(LOSS_CONFIRM_MILLIS)
+                lost = lostPermissions(checks.read())
+            }
             val granted = ALL_PERMISSIONS - lost.toSet()
             history.markGranted(granted)
             state.sawGranted += granted

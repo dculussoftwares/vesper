@@ -9,11 +9,15 @@ import com.dculus.vesper.core.sync.DeviceTarget
 import com.dculus.vesper.core.sync.FakeChildAlertsRepository
 import com.dculus.vesper.core.sync.RemoteCommand
 import com.dculus.vesper.core.testing.TestClock
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import kotlin.test.assertEquals
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class PermissionWatcherTest {
     private val target = DeviceTarget("parent-1", "device-1")
     private val granted = Permissions(usage = true, accessibility = true, overlay = true, notifications = true)
@@ -73,6 +77,19 @@ class PermissionWatcherTest {
             repeat(5) { check() }
             assertEquals(listOf(AlertPermission.ACCESSIBILITY), alerts.calls)
             assertEquals(listOf(AlertPermission.ACCESSIBILITY), alerts.open)
+        }
+
+    @Test
+    fun aLossThatIsBackBeforeTheConfirmReadIsNotAnnounced() =
+        runTest {
+            check()
+            current = granted.copy(accessibility = false)
+            val pending = launch { check() }
+            advanceTimeBy(LOSS_CONFIRM_MILLIS - 1)
+            assertEquals(emptyList(), alerts.calls)
+            current = granted
+            pending.join()
+            assertEquals(emptyList(), alerts.calls)
         }
 
     @Test
