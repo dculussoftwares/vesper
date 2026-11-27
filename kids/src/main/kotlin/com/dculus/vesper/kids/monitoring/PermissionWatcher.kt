@@ -62,6 +62,9 @@ internal class SharedPreferencesPermissionHistory
         }
     }
 
+/** How long a permission must stay off before the parent is told, in case Android only reports it off briefly. */
+internal const val LOSS_CONFIRM_MILLIS = 10_000L
+
 /** What one run of the watcher remembers between checks. */
 internal class WatchState {
     /** Permissions already announced while they stay off. */
@@ -74,7 +77,8 @@ internal class WatchState {
 /**
  * Tells the parent when this phone loses a permission blocking depends on. It checks on every heartbeat and straight
  * away when the accessibility service binds or unbinds. A permission that was never granted is not "lost" and raises
- * nothing. A loss the watcher saw happen is always announced; a permission only found off (after a restart) is
+ * nothing. A new loss is read again after [LOSS_CONFIRM_MILLIS] and ignored if it is back. A loss that lasts is
+ * announced when the watcher saw it happen; a permission only found off (after a restart) is
  * announced unless an alert for it is still open. A failed write is tried again at the next check.
  */
 class PermissionWatcher
@@ -115,13 +119,13 @@ class PermissionWatcher
             target: DeviceTarget,
             state: WatchState,
         ) {
-            val lost = lostPermissions(checks.read())
-            val granted = ALL_PERMISSIONS - lost.toSet()
-            history.markGranted(granted)
-            state.sawGranted += granted
-            val tampered = lost.filter { it in history.everGranted() }
-            // A permission that came back may be lost again later: that is a new alert.
-            state.raised.retainAll(tampered.toSet())
+            var tampered = readTampered(state)
+            val unconfirmed = tampered.filterNot { it in state.raised }.toSet()
+            if (unconfirmed.isNotEmpty()) {
+                delay(LOSS_CONFIRM_MILLIS)
+                // Only what was off in both reads: one lost during the wait gets its own wait at the next check.
+                tampered = readTampered(state).filter { it in unconfirmed }
+            }
             for (permission in tampered) {
                 if (permission in state.raised) continue
                 try {
@@ -134,6 +138,20 @@ class PermissionWatcher
                     Timber.w(e, "Reporting a lost permission failed; will retry")
                 }
             }
+        }
+
+        /**
+         * Reads the permissions, remembers the granted ones and returns the lost ones. Every read updates [state], so a
+         * permission seen back, even during the confirm wait, counts as a new loss if it goes off again.
+         */
+        private fun readTampered(state: WatchState): List<String> {
+            val lost = lostPermissions(checks.read())
+            val granted = ALL_PERMISSIONS - lost.toSet()
+            history.markGranted(granted)
+            state.sawGranted += granted
+            val tampered = lost.filter { it in history.everGranted() }
+            state.raised.retainAll(tampered.toSet())
+            return tampered
         }
 
         private companion object {
