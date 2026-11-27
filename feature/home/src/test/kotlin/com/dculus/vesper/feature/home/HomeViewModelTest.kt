@@ -392,17 +392,6 @@ class HomeViewModelTest {
             }
         }
 
-    @Test fun aiDescribeFollowsTheAiSetting() =
-        runTest {
-            val env = Env()
-            val vm = viewModel(VirtualClock(testScheduler), env)
-            vm.state.test {
-                assertEquals(false, latest(testScheduler).aiAvailable)
-                env.settings.setAiAgeAnswer(true)
-                assertEquals(true, latest(testScheduler).aiAvailable)
-            }
-        }
-
     @Test fun linkedPhonesAreListed() =
         runTest {
             val env = Env(devices = FakeLinkedDevicesRepository(listOf(device(alerts = 1))))

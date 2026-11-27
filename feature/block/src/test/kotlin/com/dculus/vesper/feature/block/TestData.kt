@@ -11,9 +11,6 @@ import com.dculus.vesper.core.model.KnownApps
 import com.dculus.vesper.core.model.LimitPeriod
 import com.dculus.vesper.core.model.LinkedDevice
 import com.dculus.vesper.core.model.TimeRange
-import com.dculus.vesper.core.sync.AiReport
-import com.dculus.vesper.core.sync.AiReporter
-import com.dculus.vesper.core.sync.BlockDescriber
 import com.dculus.vesper.core.sync.FakeAuthRepository
 import com.dculus.vesper.core.sync.FakeDeviceBlocksRepository
 import com.dculus.vesper.core.sync.ParentDeviceBlocks
@@ -130,35 +127,4 @@ class FakeUsageRepository(
     override fun blockedToday(): Flow<Int> = emptyFlow()
 
     override suspend fun backfill() = Unit
-}
-
-/** Returns [draft] for any sentence and records what it was asked. */
-class FakeBlockDescriber(
-    var draft: BlockDraft = BlockDraft(type = BlockType.LIMIT, mins = 45, fromAi = true, aiNote = "Instagram 45 min"),
-) : BlockDescriber {
-    val sentences = mutableListOf<String>()
-    val targets = mutableListOf<BlockTarget>()
-    var gate: kotlinx.coroutines.CompletableDeferred<Unit>? = null
-
-    override suspend fun build(
-        sentence: String,
-        installed: List<AppInfo>,
-        target: BlockTarget,
-    ): BlockDraft {
-        sentences += sentence
-        targets += target
-        gate?.await()
-        return draft.copy(target = target)
-    }
-}
-
-class FakeAiReporter(
-    var succeeds: Boolean = true,
-) : AiReporter {
-    val reports = mutableListOf<AiReport>()
-
-    override suspend fun report(report: AiReport): Boolean {
-        reports += report
-        return succeeds
-    }
 }

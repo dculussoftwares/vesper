@@ -31,13 +31,11 @@ internal fun homeState(
     blocks: List<HomeBlockUi> = emptyList(),
     devices: List<LinkedDevice> = emptyList(),
     firstName: String? = "Sam",
-    aiAvailable: Boolean = true,
 ) = HomeUiState(
     header = headerFor(ZonedDateTime.of(2026, 10, 18, 10, 42, 0, 0, ZoneOffset.UTC), firstName, Locale.ENGLISH),
     gauge = gauge,
     blocks = blocks,
     devices = devices,
-    aiAvailable = aiAvailable,
 )
 
 /** Rows for [blocks] with the prototype names as app labels. */
@@ -65,7 +63,6 @@ internal class Taps {
                 HomeDestinations(
                     onOpenAccount = { log += "account" },
                     onNewBlock = { log += "newBlock" },
-                    onAiDescribe = { log += "ai" },
                     onOpenInsights = { log += "insights" },
                     onOpenBlock = { log += "block" },
                     onOpenDevices = { log += "devices" },

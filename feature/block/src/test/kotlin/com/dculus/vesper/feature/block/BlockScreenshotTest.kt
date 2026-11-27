@@ -49,14 +49,13 @@ class BlockScreenshotTest {
         )
 
     @Test
-    fun empty() = shot("BlockEmpty", BlockUiState(aiAvailable = true))
+    fun empty() = shot("BlockEmpty", BlockUiState())
 
     @Test
     fun withBlocks() =
         shot(
             "BlockWithBlocks",
             BlockUiState(
-                aiAvailable = true,
                 targets = listOf(TargetUi(BlockTarget.ThisPhone, null, 2)),
                 blocks = rows(),
             ),
@@ -68,7 +67,6 @@ class BlockScreenshotTest {
         shot(
             "BlockWithDevice",
             BlockUiState(
-                aiAvailable = true,
                 targets =
                     listOf(
                         TargetUi(BlockTarget.ThisPhone, null, 2),
@@ -79,15 +77,6 @@ class BlockScreenshotTest {
             ),
         )
     }
-
-    @Test
-    fun describe() =
-        shot("DescribeFilled") {
-            DescribeScreen(DescribeUiState(text = "Instagram 10 min, then lock it for 30"), DescribeActions())
-        }
-
-    @Test
-    fun describeEmpty() = shot("DescribeEmpty") { DescribeScreen(DescribeUiState(), DescribeActions()) }
 
     @Test
     fun allApps() =

@@ -80,7 +80,6 @@ internal const val ACCOUNT_BACK_TAG = "account_back"
 internal const val ACCOUNT_OSS_TAG = "account_oss"
 internal const val ACCOUNT_GLOW_TAG = "account_warning_glow"
 internal const val ACCOUNT_TIMER_TAG = "account_app_timer"
-internal const val ACCOUNT_AI_TAG = "account_ai"
 internal const val ACCOUNT_DISCLOSURE_AGREE_TAG = "account_disclosure_agree"
 
 internal const val GITHUB_URL = "https://github.com/dculussoftwares/vesper"
@@ -134,7 +133,6 @@ internal fun AccountRoute(
     var disclosureVisible by rememberSaveable { mutableStateOf(false) }
     var batteryVisible by rememberSaveable { mutableStateOf(false) }
     var licencesVisible by rememberSaveable { mutableStateOf(false) }
-    var aiAgeVisible by rememberSaveable { mutableStateOf(false) }
     val version = remember(context) { context.versionName() }
     val scope = rememberCoroutineScope()
     val logEmpty = stringResource(R.string.account_share_log_empty)
@@ -145,7 +143,6 @@ internal fun AccountRoute(
         onSignIn = onSignIn,
         onWarningGlowChange = viewModel::setWarningGlow,
         onAppTimerChange = viewModel::setAppTimer,
-        onSetUpAi = { aiAgeVisible = true },
         onFix = { row ->
             when (row) {
                 HealthRow.Usage -> {
@@ -246,14 +243,6 @@ internal fun AccountRoute(
         onOpenGuide = { context.open(Intent(Intent.ACTION_VIEW, Uri.parse(it))) },
     )
     LicencesSheet(visible = licencesVisible, onDismiss = { licencesVisible = false })
-    AiAgeSheet(
-        visible = aiAgeVisible,
-        onAnswer = {
-            aiAgeVisible = false
-            viewModel.answerAiAge(it)
-        },
-        onDismiss = { aiAgeVisible = false },
-    )
 }
 
 private fun Context.versionName(): String =
@@ -292,7 +281,6 @@ internal fun AccountScreen(
     onShareLog: (() -> Unit)? = null,
     onWarningGlowChange: (Boolean) -> Unit = {},
     onAppTimerChange: (Boolean) -> Unit = {},
-    onSetUpAi: () -> Unit = {},
 ) {
     V5Screen(darkContent = false, modifier = modifier) {
         Column(
@@ -346,7 +334,6 @@ internal fun AccountScreen(
                         onCheckedChange = onAppTimerChange,
                         modifier = Modifier.padding(top = 16.dp).testTag(ACCOUNT_TIMER_TAG),
                     )
-                    if (state.authLoaded) V5AiRow(state.aiAllowed, onSetUpAi)
                 }
             }
             V5Card(Modifier.fillMaxWidth()) {
@@ -553,39 +540,6 @@ private fun V5ToggleRow(
             Text(subtitle, style = VesperTheme.type.label, color = VesperTheme.colors.textSecondary)
         }
         V5Toggle(checked = checked, onCheckedChange = null)
-    }
-}
-
-/** Opens the age question once; afterwards it only says whether AI drafts are available. */
-@Composable
-private fun V5AiRow(
-    allowed: Boolean?,
-    onSetUp: () -> Unit,
-) {
-    Column(
-        Modifier
-            .testTag(ACCOUNT_AI_TAG)
-            .fillMaxWidth()
-            .clickable(enabled = allowed == null, role = Role.Button, onClick = onSetUp)
-            .padding(top = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(2.dp),
-    ) {
-        Text(
-            stringResource(R.string.account_ai_title),
-            style = VesperTheme.type.bodyL.copy(fontSize = 15.sp),
-            color = VesperTheme.colors.ink,
-        )
-        Text(
-            stringResource(
-                when (allowed) {
-                    null -> R.string.account_ai_set_up
-                    true -> R.string.account_ai_on
-                    false -> R.string.account_ai_unavailable
-                },
-            ),
-            style = VesperTheme.type.label,
-            color = VesperTheme.colors.textSecondary,
-        )
     }
 }
 

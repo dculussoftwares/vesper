@@ -70,8 +70,6 @@ data class BlockUiState(
     val blocks: List<BlockRowUi> = emptyList(),
     /** All apps tab: launchable apps of the selected target, A to Z. */
     val apps: List<AppRowUi> = emptyList(),
-    /** The "AI Describe" button is shown only when the AI feature is on. */
-    val aiAvailable: Boolean = false,
     val installedPackages: Set<String> = emptySet(),
 ) {
     val selectedTarget: TargetUi get() = targets.first { it.target == selected }
@@ -89,11 +87,6 @@ sealed interface BlockEvent {
         val blockId: String,
         val target: String?,
     ) : BlockEvent
-
-    /** Open the "Describe a block" screen for [target] (a child device id, null = this phone). */
-    data class OpenDescribe(
-        val target: String?,
-    ) : BlockEvent
 }
 
 private data class LocalState(
@@ -107,7 +100,6 @@ private data class Remote(
     val installed: List<AppInfo>,
     val locked: List<LockedApp>,
     val today: Map<String, AppUsageStat>,
-    val aiEnabled: Boolean,
 )
 
 @Suppress("TooManyFunctions")
@@ -157,7 +149,7 @@ class BlockViewModel
                         lockedApps.observeAll(),
                         usage.today(),
                     ) { byTarget, installed, s, locked, today ->
-                        Remote(devices, byTarget, installed, locked, today.apps.associateBy { it.pkg }, s.aiEnabled)
+                        Remote(devices, byTarget, installed, locked, today.apps.associateBy { it.pkg })
                     }
                 }
 
@@ -168,9 +160,6 @@ class BlockViewModel
         fun selectTarget(target: BlockTarget) = local.update { it.copy(selected = target) }
 
         fun selectTab(tab: BlockTab) = local.update { it.copy(tab = tab) }
-
-        /** The AI pill / FAB: opens the "Describe a block" screen for the selected target. */
-        fun describe() = emit(BlockEvent.OpenDescribe(state.value.selected.deviceId()))
 
         fun setBlockEnabled(
             id: String,
@@ -264,7 +253,6 @@ class BlockViewModel
                     } else {
                         emptyList()
                     },
-                aiAvailable = aiEnabled,
                 installedPackages = installed.mapTo(hashSetOf()) { it.pkg },
             )
         }

@@ -117,16 +117,12 @@ gate under 5 minutes):
 |---|---|
 | Onboarding to Home | `journeys/onboarding_to_home.yaml` |
 | New block via the wizard | `journeys/new_block_wizard.yaml` |
-| Describe with AI (on-device fallback) | **not covered, see finding F3** |
 | Break start and end | `journeys/break_start_end.yaml` (smoke has `smoke/take_a_break.yaml`) |
 | Insights Day and Week | `journeys/insights_day_week.yaml` |
 
 Existing smoke flows (`smoke/*`) are unchanged and still match the v5 copy.
 
 The flows were run on the CI emulator (`e2e` workflow on this branch). That run showed:
-- **F3 (resolved):** nothing set `AppSettings.aiEnabled`, so Describe with AI could not be reached. Account, "AI block
-  drafts" now asks for the birth month and year once and turns it on for adults only (Gemini's terms exclude under-18s).
-  Still open: add `journeys/describe_with_ai.yaml` (answer as an adult, type a sentence, assert the wizard rule card and
-  the "Check the details, then turn it on." banner; CI has no Firebase config so it exercises the on-device parser).
+- **F3 (closed):** the "Describe a block" entry points could never be reached. The AI feature has since been removed.
 - Insights on a fresh emulator has no usage data, so the hero card is replaced by "No data for this day"; the flow asserts
   that state and the Day/Week switch, not the hero numbers.

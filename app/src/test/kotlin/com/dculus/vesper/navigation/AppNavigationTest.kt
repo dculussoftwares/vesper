@@ -32,7 +32,6 @@ import com.dculus.vesper.core.model.BlockDraft
 import com.dculus.vesper.core.model.BlockTarget
 import com.dculus.vesper.core.navigation.Account
 import com.dculus.vesper.core.navigation.Block
-import com.dculus.vesper.core.navigation.BlockDescribe
 import com.dculus.vesper.core.navigation.BlockWizard
 import com.dculus.vesper.core.navigation.Devices
 import com.dculus.vesper.core.navigation.Home
@@ -44,9 +43,6 @@ import com.dculus.vesper.core.navigation.Permissions
 import com.dculus.vesper.core.navigation.RemoteDevice
 import com.dculus.vesper.core.navigation.SignIn
 import com.dculus.vesper.core.navigation.Welcome
-import com.dculus.vesper.core.sync.AiReport
-import com.dculus.vesper.core.sync.AiReporter
-import com.dculus.vesper.core.sync.BlockDescriber
 import com.dculus.vesper.core.sync.CommandSender
 import com.dculus.vesper.core.sync.FakeAccountDeletionRepository
 import com.dculus.vesper.core.sync.FakeAuthRepository
@@ -74,9 +70,7 @@ import com.dculus.vesper.core.usage.UsageAccess
 import com.dculus.vesper.core.usage.UsageAverages
 import com.dculus.vesper.core.usage.UsageRepository
 import com.dculus.vesper.feature.account.AccountViewModel
-import com.dculus.vesper.feature.block.AiDraftHandoff
 import com.dculus.vesper.feature.block.BlockViewModel
-import com.dculus.vesper.feature.block.DescribeViewModel
 import com.dculus.vesper.feature.block.TargetApp
 import com.dculus.vesper.feature.block.TargetAppsProvider
 import com.dculus.vesper.feature.block.WizardViewModel
@@ -124,22 +118,6 @@ class AppNavigationTest {
             override fun blockedToday() = flowOf(0)
 
             override suspend fun backfill() = Unit
-        }
-
-    private val handoff = AiDraftHandoff()
-
-    private val describer =
-        object : BlockDescriber {
-            override suspend fun build(
-                sentence: String,
-                installed: List<AppInfo>,
-                target: BlockTarget,
-            ) = BlockDraft(target = target, fromAi = true)
-        }
-
-    private val reporter =
-        object : AiReporter {
-            override suspend fun report(report: AiReport) = true
         }
 
     private val blockViewModel =
@@ -191,7 +169,6 @@ class AppNavigationTest {
             EngineHealthMonitor(Clock.systemUTC()),
             FakeAccountDeletionRepository(accountAuth) {},
             FakeSettingsRepository(),
-            Clock.systemUTC(),
         )
     private val homeViewModel =
         HomeViewModel(
@@ -209,7 +186,7 @@ class AppNavigationTest {
             },
             FakeLinkedDevicesRepository(),
             FakeAccountProfileRepository(),
-            FakeSettingsRepository(AppSettings(aiEnabled = true)),
+            FakeSettingsRepository(),
         )
     private val wizardViewModel =
         WizardViewModel(
@@ -218,23 +195,9 @@ class AppNavigationTest {
                 override fun apps(target: BlockTarget) = flowOf(emptyList<TargetApp>())
             },
             FakeLinkedDevicesRepository(),
-            FakeSettingsRepository(),
             FakeBlockRepository(),
             ParentDeviceBlocks(FakeAuthRepository(), FakeDeviceBlocksRepository()),
             Clock.systemUTC(),
-            handoff,
-            reporter,
-        )
-
-    private val describeViewModel =
-        DescribeViewModel(
-            SavedStateHandle(),
-            object : InstalledAppsRepository {
-                override fun observeLaunchableApps() = flowOf(emptyList<AppInfo>())
-            },
-            FakeLinkedDevicesRepository(),
-            describer,
-            handoff,
         )
 
     private fun launch(startGraph: StartGraph = StartGraph.MAIN) {
@@ -246,7 +209,6 @@ class AppNavigationTest {
                     navController = navController,
                     blockViewModel = { blockViewModel },
                     wizardViewModel = { wizardViewModel },
-                    describeViewModel = { describeViewModel },
                     insightsContent = { NavPlaceholderScreen(title = "Insights") },
                     homeViewModel = { homeViewModel },
                     signInViewModel = { signInViewModel },
@@ -383,16 +345,6 @@ class AppNavigationTest {
         composeRule.onNodeWithTag("home_link_phone").performScrollTo().performClick()
         composeRule.waitForIdle()
         assertTrue(currentIs(LinkAdd::class), "the empty linked-phones state leads to the link flow")
-    }
-
-    @Test
-    fun aiDescribeOpensTheDescribeScreenWithoutTheTabBar() {
-        launch()
-        composeRule.onNodeWithTag("home_list").performScrollToNode(hasTestTag("home_ai_describe"))
-        composeRule.onNodeWithTag("home_ai_describe").performScrollTo().performClick()
-        composeRule.waitForIdle()
-        assertTrue(currentIs(BlockDescribe::class))
-        assertTrue(!tabBarVisible())
     }
 
     @Test

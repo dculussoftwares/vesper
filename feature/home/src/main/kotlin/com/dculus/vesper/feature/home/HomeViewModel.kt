@@ -150,7 +150,6 @@ class HomeViewModel
                 gauge,
                 blockRows,
                 linkedDevices.observeAll(),
-                settings.settings.map { it.aiEnabled },
                 ::HomeUiState,
             ).stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), initialState())
 
@@ -160,7 +159,6 @@ class HomeViewModel
                 gauge = if (accessGranted.value) emptyGauge() else GaugeUi.NoAccess,
                 blocks = emptyList(),
                 devices = emptyList(),
-                aiAvailable = false,
             )
 
         private fun emptyGauge() =

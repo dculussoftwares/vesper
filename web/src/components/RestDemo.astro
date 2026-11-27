@@ -1,5 +1,5 @@
 ---
-// The live demo: pick an app and a rule (or describe it), and see the screen Vesper shows when time is up.
+// The live demo: pick an app and a rule, and see the screen Vesper shows when time is up.
 // Copy follows the app: core/blocking strings.xml (block screen) and docs/design/V5_SPEC.md (rule sentences).
 // App logos: Icons8 "color" pack (public/apps, see web/icons8.json), credited in the footer.
 const apps = [
@@ -19,12 +19,6 @@ const presets = [
   { id: "school", name: "School", from: "08:00", to: "15:00", weekdays: true },
   { id: "work", name: "Work", from: "09:00", to: "17:00", weekdays: true },
   { id: "dinner", name: "Dinner", from: "19:00", to: "20:30", weekdays: false },
-];
-const examples = [
-  "Instagram 10 min, then lock it for 30",
-  "No TikTok or YouTube on school days 8–3",
-  "YouTube max 1 hour a day",
-  "Block Reddit for the next 2 hours",
 ];
 ---
 
@@ -122,22 +116,6 @@ const examples = [
     </form>
   </div>
 
-  <form class="describe" data-describe data-rise style="--i:3">
-    <label for="describe-input">Or describe it in words</label>
-    <div class="describe-row">
-      <input id="describe-input" name="sentence" type="text" autocomplete="off" placeholder="e.g. Let me use Instagram for 10 minutes, then lock it for 30" />
-      <button class="button" type="submit">
-        <svg viewBox="0 0 20 20" aria-hidden="true" fill="currentColor"><path d="M10 1.5c.7 3.6 1.8 5 5.3 5.9-3.5.9-4.6 2.3-5.3 5.9-.7-3.6-1.8-5-5.3-5.9 3.5-.9 4.6-2.3 5.3-5.9Zm5.5 10c.3 1.6.8 2.2 2.4 2.6-1.6.4-2.1 1-2.4 2.6-.3-1.6-.8-2.2-2.4-2.6 1.6-.4 2.1-1 2.4-2.6Z" /></svg>
-        Build my block
-      </button>
-    </div>
-    <ul class="examples" aria-label="Examples">
-      {examples.map((e) => <li><button type="button" data-example>{e}</button></li>)}
-    </ul>
-    <p class="describe-status" data-status aria-live="polite">
-      In the app, AI drafts the block from your sentence, and nothing turns on until you check it.
-    </p>
-  </form>
 </section>
 
 <style>
@@ -482,82 +460,6 @@ const examples = [
     line-height: 1.2;
   }
 
-  /* Describe it in words */
-  .describe {
-    margin-top: 40px;
-    max-width: 980px;
-  }
-
-  .describe label {
-    display: block;
-    font-size: var(--t-statement);
-    font-weight: 400;
-    letter-spacing: -0.01em;
-    margin-bottom: 16px;
-  }
-
-  .describe-row {
-    display: flex;
-    gap: 10px;
-  }
-
-  .describe input {
-    flex: 1;
-    min-width: 0;
-    min-height: 62px;
-    padding: 0 26px;
-    border: 0;
-    border-radius: 31px;
-    background: var(--surface);
-    color: var(--ink);
-    font: 400 18px var(--font);
-  }
-
-  .describe input::placeholder {
-    color: var(--muted);
-  }
-
-  .describe .button {
-    min-height: 62px;
-  }
-
-  .examples {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin: 16px 0 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .examples button {
-    min-height: 44px;
-    padding: 0 18px;
-    border: 0;
-    border-radius: 22px;
-    background: var(--step);
-    color: var(--ink);
-    font: 500 15px var(--font);
-    cursor: pointer;
-    transition:
-      background-color 160ms var(--ease),
-      transform 160ms var(--ease);
-  }
-
-  .examples button:hover {
-    background: var(--mint);
-  }
-
-  .examples button:active {
-    transform: scale(0.97);
-  }
-
-  .describe-status {
-    margin-top: 16px;
-    color: var(--muted);
-    font-size: var(--t-small);
-  }
-
   @media (max-width: 900px) {
     .demo {
       grid-template-columns: 1fr;
@@ -569,9 +471,6 @@ const examples = [
     .rest {
       min-height: 520px;
     }
-    .describe-row {
-      flex-direction: column;
-    }
   }
 </style>
 
@@ -580,7 +479,6 @@ const examples = [
 
   const demo = document.querySelector<HTMLElement>("[data-demo]");
   const form = document.querySelector<HTMLFormElement>("[data-controls]");
-  const describe = document.querySelector<HTMLFormElement>("[data-describe]");
 
   // Durations as the app formats them (fm): "N min", whole hours "Nh", else "Nh Mm".
   const fm = (m: number) => (m < 60 ? `${m} min` : m % 60 === 0 ? `${m / 60}h` : `${Math.floor(m / 60)}h ${m % 60}m`);
@@ -687,92 +585,6 @@ const examples = [
       if (entry?.isIntersecting) timer = window.setInterval(tick, 1000);
     }).observe(demo);
 
-    // Describe it in words: a small reader for the kinds of sentence the app understands.
-    const setRadio = (name: string, v: string) => {
-      const input = form.querySelector<HTMLInputElement>(`input[name="${name}"][value="${v}"]`);
-      if (input) input.checked = true;
-    };
-    const setRange = (name: string, v: number) => {
-      const input = field(name) as HTMLInputElement;
-      const step = Number(input.step);
-      input.value = String(Math.min(Number(input.max), Math.max(Number(input.min), Math.round(v / step) * step)));
-    };
-    const minutes = (n: string, unit: string) => Math.round(Number(n) * (/^h/.test(unit) ? 60 : 1));
-    const hour = (h: string, m?: string) => `${pad(Number(h) % 24)}:${m ?? "00"}`;
-
-    const read = (text: string): string | null => {
-      const t = text.toLowerCase().replace(/–|—/g, "-");
-      const found = ["instagram", "youtube", "tiktok", "reddit"]
-        .map((id) => ({ id, at: t.indexOf(id) }))
-        .filter((a) => a.at >= 0)
-        .sort((a, b) => a.at - b.at)[0];
-      if (found) setRadio("app", found.id);
-      let m: RegExpMatchArray | null;
-      if ((m = t.match(/(\d+)\s*(?:min|m)\w*.*?(?:then|and)\s+(?:lock|block|rest)\w*(?:\s+it)?(?:\s+for)?\s+(\d+(?:\.\d+)?)\s*(h\w*|m\w*)?/))) {
-        setRadio("type", "cycle");
-        setRange("open", Number(m[1]));
-        setRange("rest", minutes(m[2]!, m[3] ?? "min"));
-        return "Use, then lock";
-      }
-      if ((m = t.match(/next\s+(\d+(?:\.\d+)?)\s*(h\w*|m\w*)/))) {
-        setRadio("type", "now");
-        setRange("now", minutes(m[1]!, m[2]!));
-        return "Block now";
-      }
-      if ((m = t.match(/(\d{1,2})(?::(\d\d))?\s*(?:-|to)\s*(\d{1,2})(?::(\d\d))?/))) {
-        let from = Number(m[1]);
-        let to = Number(m[3]);
-        if (to <= 12 && to < from) to += 12;
-        if (/night|bed/.test(t) && from < 12) from += 12;
-        setRadio("type", "schedule");
-        form.querySelectorAll<HTMLInputElement>('input[name="preset"]').forEach((p) => (p.checked = false));
-        custom = { from: hour(String(from), m[2]), to: hour(String(to), m[4]), weekdays: /school|weekday|work|mon/.test(t) };
-        return "Block during hours";
-      }
-      if ((m = t.match(/(\d+(?:\.\d+)?)\s*(hours?|hrs?|h|minutes?|mins?|m)\b/))) {
-        setRadio("type", "limit");
-        setRange("limit", minutes(m[1]!, m[2]!));
-        return "Time limit";
-      }
-      return null;
-    };
-
-    if (describe) {
-      const input = describe.querySelector<HTMLInputElement>("input")!;
-      const status = describe.querySelector<HTMLElement>("[data-status]")!;
-      const build = () => {
-        const kind = read(input.value);
-        if (!kind) {
-          status.textContent = "Name an app and a time, like the examples below.";
-          return;
-        }
-        render(true);
-        status.textContent = `Drafted a “${kind}” block. Check the details above.`;
-        const box = demo.getBoundingClientRect();
-        if (box.top < 0 || box.top > window.innerHeight * 0.5) {
-          const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-          demo.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
-        }
-      };
-      describe.addEventListener("submit", (event) => {
-        event.preventDefault();
-        build();
-      });
-      describe.querySelectorAll<HTMLButtonElement>("[data-example]").forEach((b) =>
-        b.addEventListener("click", () => {
-          input.value = b.textContent ?? "";
-          build();
-        }),
-      );
-    }
-
     render(true);
-
-    // A sentence sent from the hero form (?q=...).
-    const q = new URLSearchParams(window.location.search).get("q");
-    if (q && describe) {
-      describe.querySelector<HTMLInputElement>("input")!.value = q;
-      describe.requestSubmit();
-    }
   }
 </script>

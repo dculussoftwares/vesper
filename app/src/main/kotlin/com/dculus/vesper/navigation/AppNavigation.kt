@@ -41,19 +41,13 @@ import com.dculus.vesper.feature.account.AccountViewModel
 import com.dculus.vesper.feature.account.accountScreen
 import com.dculus.vesper.feature.account.navigateToAccount
 import com.dculus.vesper.feature.block.BlockViewModel
-import com.dculus.vesper.feature.block.DescribeViewModel
 import com.dculus.vesper.feature.block.WizardViewModel
-import com.dculus.vesper.feature.block.blockDescribeScreen
 import com.dculus.vesper.feature.block.blockScreen
 import com.dculus.vesper.feature.block.blockWizardScreen
-import com.dculus.vesper.feature.block.closeBlockDescribe
 import com.dculus.vesper.feature.block.closeBlockWizard
 import com.dculus.vesper.feature.block.finishBlockWizard
-import com.dculus.vesper.feature.block.navigateToBlockDescribe
 import com.dculus.vesper.feature.block.navigateToBlockEditor
 import com.dculus.vesper.feature.block.navigateToBlockWizard
-import com.dculus.vesper.feature.block.openWizardFromDescribe
-import com.dculus.vesper.feature.block.replaceWizardWithDescribe
 import com.dculus.vesper.feature.devices.DevicesViewModel
 import com.dculus.vesper.feature.devices.LinkAddViewModel
 import com.dculus.vesper.feature.devices.LinkConfirmViewModel
@@ -85,7 +79,6 @@ fun VesperNavigation(
     navController: NavHostController = rememberNavController(),
     blockViewModel: (@Composable () -> BlockViewModel)? = null,
     wizardViewModel: (@Composable () -> WizardViewModel)? = null,
-    describeViewModel: (@Composable () -> DescribeViewModel)? = null,
     insightsContent: (@Composable () -> Unit)? = null,
     homeViewModel: (@Composable () -> HomeViewModel)? = null,
     signInViewModel: (@Composable () -> SignInViewModel)? = null,
@@ -123,7 +116,6 @@ fun VesperNavigation(
                     onFinishOnboarding,
                     blockViewModel,
                     wizardViewModel,
-                    describeViewModel,
                     insightsContent,
                     homeViewModel,
                     signInViewModel,
@@ -162,7 +154,6 @@ private fun AppNavHost(
     onFinishOnboarding: () -> Unit,
     blockViewModel: (@Composable () -> BlockViewModel)?,
     wizardViewModel: (@Composable () -> WizardViewModel)?,
-    describeViewModel: (@Composable () -> DescribeViewModel)?,
     insightsContent: (@Composable () -> Unit)?,
     homeViewModel: (@Composable () -> HomeViewModel)?,
     signInViewModel: (@Composable () -> SignInViewModel)?,
@@ -202,7 +193,6 @@ private fun AppNavHost(
                     HomeDestinations(
                         onOpenAccount = { navController.navigateToAccount() },
                         onNewBlock = { navController.navigateToBlockWizard() },
-                        onAiDescribe = { navController.navigateToBlockDescribe() },
                         onOpenInsights = { navController.navigateToTab(MainTab.INSIGHTS) },
                         onOpenBlock = { navController.navigateToTab(MainTab.BLOCK) },
                         onOpenDevices = { navController.navigateToTab(MainTab.DEVICES) },
@@ -219,20 +209,13 @@ private fun AppNavHost(
             )
             blockScreen(
                 onOpenWizard = { target, prefill -> navController.navigateToBlockWizard(target, prefill) },
-                onDescribe = { target -> navController.navigateToBlockDescribe(target) },
                 onEditBlock = { id, target -> navController.navigateToBlockEditor(id, target) },
                 viewModelProvider = blockViewModel,
             )
             blockWizardScreen(
                 onClose = { navController.closeBlockWizard() },
-                onDescribeWithAi = { target -> navController.replaceWizardWithDescribe(target) },
                 onFinish = { deviceId, message -> navController.finishBlockWizard(deviceId, message) },
                 viewModelProvider = wizardViewModel,
-            )
-            blockDescribeScreen(
-                onBack = { navController.closeBlockDescribe() },
-                onOpenWizard = { target -> navController.openWizardFromDescribe(target) },
-                viewModelProvider = describeViewModel,
             )
             devicesScreen(
                 onLinkPhone = { navController.navigateToLinkAdd() },

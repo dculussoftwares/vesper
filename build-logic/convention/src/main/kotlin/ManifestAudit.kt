@@ -39,6 +39,9 @@ object ManifestAudit {
         val permissions = root.names("uses-permission") + root.names("uses-permission-sdk-23")
         FORBIDDEN_PERMISSIONS.filter { it in permissions }.forEach { violations += "forbidden permission $it" }
 
+        // AI is off in both apps: Gemini's terms exclude under-18s. The SDK registers itself in the merged manifest.
+        if (AI_SDK_REGISTRAR in xml) violations += "the Firebase AI SDK must not be included"
+
         val application = root.children("application").firstOrNull()
         val services = application?.children("service").orEmpty()
         val fgsServices = services.filter { it.attr("foregroundServiceType") != null }
@@ -53,8 +56,6 @@ object ManifestAudit {
             }
 
             AppRole.KIDS -> {
-                // Gemini's terms exclude apps for under-18s; the SDK registers itself in the merged manifest.
-                if (AI_SDK_REGISTRAR in xml) violations += ":kids must not include the Firebase AI SDK"
                 if (monitoringFlag != "child_monitoring") {
                     violations += ":kids must declare isMonitoringTool=child_monitoring"
                 }

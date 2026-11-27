@@ -23,7 +23,7 @@ Store the files next to this README. Never use mock-ups that show features that 
 The Kids screenshots are rendered from the app's screens with sample data (Roborazzi at 3x), then framed with a caption.
 
 Suggested screenshots, taken from a release-like build with the final copy:
-- Vesper: Home (gauge and hourly bars), Block wizard, AI draft (marked "AI DRAFT"), Devices, Remote device screen.
+- Vesper: Home (gauge and hourly bars), Block wizard, Devices, Remote device screen.
 - Kids: Link screen (QR), Home with the "This phone is managed by" notice, the disclosure screens for Usage Access and Accessibility.
 
 ## Review checklist (human, acceptance criterion of M10-05)
@@ -32,8 +32,6 @@ Suggested screenshots, taken from a release-like build with the final copy:
       persistent notice and must consent on the phone, and never uses "spy", "hidden", "secret" or "track without them knowing".
 - [ ] Neither listing promotes covert use; there is no wording about hiding the app icon or avoiding detection.
 - [ ] Accessibility and Usage Access are disclosed in the description as they are in the in-app prominent disclosure.
-- [ ] AI-generated content policy: the AI feature is described as drafting a block from the user's sentence, the user
-      confirms before anything turns on, and "Report a bad result" exists in the app.
 - [ ] Families Policy answers and target audience for Kids match `docs/play/DATA_SAFETY.md`.
 - [ ] Every feature mentioned is shipped in the build being submitted (remove the rest).
 - [ ] Graphics come from real builds and contain no third-party trademarks or unreleased features.

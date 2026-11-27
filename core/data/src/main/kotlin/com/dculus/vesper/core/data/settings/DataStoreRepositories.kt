@@ -23,8 +23,6 @@ private object Keys {
     val onboardingComplete = booleanPreferencesKey("onboardingComplete")
     val accountSkipped = booleanPreferencesKey("accountSkipped")
     val accessibilityConsentAt = longPreferencesKey("accessibilityConsentAt")
-    val aiEnabled = booleanPreferencesKey("aiEnabled")
-    val aiAgeAnswered = booleanPreferencesKey("aiAgeAnswered")
     val usageWarningGlow = booleanPreferencesKey("usageWarningGlow")
     val appStartTimer = booleanPreferencesKey("appStartTimer")
     val breakStartedAt = longPreferencesKey("breakSession.startedAt")
@@ -68,8 +66,6 @@ internal class DataStoreSettingsRepository
                         focusSession = prefs.focusSession(),
                         allLocked = prefs[Keys.allLocked] ?: false,
                         accessibilityConsentAt = prefs[Keys.accessibilityConsentAt]?.let(Instant::ofEpochMilli),
-                        aiEnabled = prefs[Keys.aiEnabled] ?: false,
-                        aiAgeAnswered = prefs[Keys.aiAgeAnswered] ?: false,
                         usageWarningGlow = prefs[Keys.usageWarningGlow] ?: true,
                         appStartTimer = prefs[Keys.appStartTimer] ?: true,
                     )
@@ -112,15 +108,6 @@ internal class DataStoreSettingsRepository
                     prefs.remove(Keys.accessibilityConsentAt)
                 } else {
                     prefs[Keys.accessibilityConsentAt] = at.toEpochMilli()
-                }
-            }
-        }
-
-        override suspend fun setAiAgeAnswer(isAdult: Boolean) {
-            store.edit { prefs ->
-                if (prefs[Keys.aiAgeAnswered] != true) {
-                    prefs[Keys.aiAgeAnswered] = true
-                    prefs[Keys.aiEnabled] = isAdult
                 }
             }
         }

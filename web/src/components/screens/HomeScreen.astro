@@ -1,6 +1,5 @@
 ---
-// Vesper home (feature/home): screen time today, the day chart, Blocked and Most used, Block apps, Take a break and
-// the "Describe a block in your words" box, which types out example sentences.
+// Vesper home (feature/home): screen time today, the day chart, Blocked and Most used, Block apps and Take a break.
 import AppIcon from "./AppIcon.astro";
 import { dayChart, uid } from "../../lib/screens";
 
@@ -10,7 +9,6 @@ const chart = dayChart(hours, 330, 60);
 const now = chart.points[12]!;
 const ticks = Array.from({ length: 41 }, (_, i) => i);
 const fill = uid("h-fill");
-const examples = ["Instagram 10 min, then lock it for 30", "YouTube max 1 hour a day", "No TikTok on school days 8–3"];
 ---
 
 <div class="ls-body home">
@@ -81,15 +79,6 @@ const examples = ["Instagram 10 min, then lock it for 30", "YouTube max 1 hour a
         <span class="ruler-mark"></span>
       </div>
     </section>
-  </div>
-
-  <div class="ask-pill" data-in style="--d:380">
-    <svg class="spark" viewBox="0 0 20 20" fill="currentColor"><path d="M10 1.5c.7 3.6 1.8 5 5.3 5.9-3.5.9-4.6 2.3-5.3 5.9-.7-3.6-1.8-5-5.3-5.9 3.5-.9 4.6-2.3 5.3-5.9Zm5.5 10c.3 1.6.8 2.2 2.4 2.6-1.6.4-2.1 1-2.4 2.6-.3-1.6-.8-2.2-2.4-2.6 1.6-.4 2.1-1 2.4-2.6Z"></path></svg>
-    <span class="ask-text" data-type-loop={JSON.stringify(examples)}>
-      <span class="ph">Describe a block in your words</span>
-      <span class="tx"></span>
-    </span>
-    <span class="go"><svg viewBox="0 0 20 20"><path d="M4 10h11m-4.5-4.5L15 10l-4.5 4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
   </div>
 
   <section class="h-peek brand" data-in style="--d:440"></section>

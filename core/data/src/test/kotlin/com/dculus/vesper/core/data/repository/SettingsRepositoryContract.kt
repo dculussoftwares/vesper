@@ -56,28 +56,6 @@ abstract class SettingsRepositoryContract {
                     AppSettings(onboardingComplete = true, accountSkipped = true, accessibilityConsentAt = consent),
                     awaitItem(),
                 )
-                repo.setAiAgeAnswer(true)
-                assertEquals(
-                    AppSettings(
-                        onboardingComplete = true,
-                        accountSkipped = true,
-                        accessibilityConsentAt = consent,
-                        aiEnabled = true,
-                        aiAgeAnswered = true,
-                    ),
-                    awaitItem(),
-                )
-                cancelAndIgnoreRemainingEvents()
-            }
-        }
-
-    @Test
-    fun `only the first AI age answer counts`() =
-        runTest {
-            repo.setAiAgeAnswer(false)
-            repo.setAiAgeAnswer(true)
-            repo.settings.test {
-                assertEquals(AppSettings(aiAgeAnswered = true), awaitItem())
                 cancelAndIgnoreRemainingEvents()
             }
         }
@@ -128,7 +106,6 @@ abstract class SettingsRepositoryContract {
     fun `goal defaults to 180 minutes, also when other settings already exist`() =
         runTest {
             repo.setOnboardingComplete(true)
-            repo.setAiAgeAnswer(true)
             repo.screenTimeGoalMins.test {
                 assertEquals(180, awaitItem())
                 cancelAndIgnoreRemainingEvents()

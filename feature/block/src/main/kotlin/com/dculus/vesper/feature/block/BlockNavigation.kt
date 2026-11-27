@@ -25,7 +25,6 @@ import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
 import com.dculus.vesper.core.model.BlockTarget
 import com.dculus.vesper.core.navigation.Block
-import com.dculus.vesper.core.navigation.BlockDescribe
 import com.dculus.vesper.core.navigation.BlockWizard
 import com.dculus.vesper.core.ui.components.ToastController
 import com.dculus.vesper.core.ui.components.V5ToastHost
@@ -50,7 +49,6 @@ fun NavController.navigateToBlockEditor(
 /** Block tab. [onOpenWizard] opens the wizard for a target (child device id, null = this phone) and template. */
 fun NavGraphBuilder.blockScreen(
     onOpenWizard: (target: String?, prefill: String?) -> Unit,
-    onDescribe: (target: String?) -> Unit,
     /** Opens the wizard in edit mode for a block id on a target (child device id, null = this phone). */
     onEditBlock: (blockId: String, target: String?) -> Unit = { _, _ -> },
     /** Supplies the ViewModel; null uses Hilt. Lets navigation tests run without a Hilt application. */
@@ -59,7 +57,6 @@ fun NavGraphBuilder.blockScreen(
     composable<Block> { entry ->
         BlockRoute(
             onOpenWizard,
-            onDescribe,
             viewModelProvider?.invoke() ?: hiltViewModel(),
             entry.savedStateHandle,
             onEditBlock,
@@ -72,31 +69,6 @@ private fun NavController.onWizard(): Boolean = currentDestination?.hasRoute<Blo
 /** Closes the wizard. A repeated call (double tap) is ignored once the wizard is gone. */
 fun NavController.closeBlockWizard() {
     if (onWizard()) popBackStack()
-}
-
-/** Opens the "Describe a block" screen for [target] (a child device id, null = this phone). */
-fun NavController.navigateToBlockDescribe(
-    target: String? = null,
-    navOptions: NavOptions? = null,
-) = navigate(BlockDescribe(target = target), navOptions)
-
-/** Replaces the wizard with the describe screen (the wizard's "Rather just describe it?"). Ignored once it is gone. */
-fun NavController.replaceWizardWithDescribe(target: String?) {
-    if (!onWizard()) return
-    navigate(BlockDescribe(target = target)) { popUpTo<BlockWizard> { inclusive = true } }
-}
-
-private fun NavController.onDescribe(): Boolean = currentDestination?.hasRoute<BlockDescribe>() == true
-
-/** Replaces the describe screen with the wizard on step 3 under the AI DRAFT banner. Ignored once it is gone. */
-fun NavController.openWizardFromDescribe(target: String?) {
-    if (!onDescribe()) return
-    navigate(BlockWizard(target = target, prefill = AI_PREFILL)) { popUpTo<BlockDescribe> { inclusive = true } }
-}
-
-/** Closes the describe screen. A repeated call (double tap) is ignored once it is gone. */
-fun NavController.closeBlockDescribe() {
-    if (onDescribe()) popBackStack()
 }
 
 /** Saved-state keys the wizard sets on the Block entry after "Turn on block": the target to select and the toast. */
@@ -122,65 +94,18 @@ fun NavController.finishBlockWizard(
 /** The 3-step block wizard, a sub-screen without a tab bar. */
 fun NavGraphBuilder.blockWizardScreen(
     onClose: () -> Unit,
-    onDescribeWithAi: (target: String?) -> Unit,
     onFinish: (deviceId: String?, message: String) -> Unit,
     /** Supplies the ViewModel; null uses Hilt. Lets navigation tests run without a Hilt application. */
     viewModelProvider: (@Composable () -> WizardViewModel)? = null,
 ) {
     composable<BlockWizard> {
-        BlockWizardRoute(onClose, onDescribeWithAi, onFinish, viewModelProvider?.invoke() ?: hiltViewModel())
-    }
-}
-
-/** "Describe a block" (AI), a sub-screen without a tab bar. */
-fun NavGraphBuilder.blockDescribeScreen(
-    onBack: () -> Unit,
-    onOpenWizard: (target: String?) -> Unit,
-    /** Supplies the ViewModel; null uses Hilt. Lets navigation tests run without a Hilt application. */
-    viewModelProvider: (@Composable () -> DescribeViewModel)? = null,
-) {
-    composable<BlockDescribe> {
-        BlockDescribeRoute(onBack, onOpenWizard, viewModelProvider?.invoke() ?: hiltViewModel())
-    }
-}
-
-@Composable
-internal fun BlockDescribeRoute(
-    onBack: () -> Unit,
-    onOpenWizard: (target: String?) -> Unit,
-    viewModel: DescribeViewModel,
-) {
-    val state by viewModel.state.collectAsStateWithLifecycle()
-    val toast = rememberToastController()
-    val linkFirst = stringResource(R.string.block_wizard_link_first)
-    val currentOpenWizard by rememberUpdatedState(onOpenWizard)
-    LaunchedEffect(viewModel) {
-        viewModel.events.collect { event ->
-            when (event) {
-                is DescribeEvent.OpenWizard -> currentOpenWizard(event.target)
-                DescribeEvent.NoLinkedPhone -> toast.show(linkFirst)
-            }
-        }
-    }
-    val actions =
-        remember(viewModel, onBack) {
-            DescribeActions(
-                onBack = onBack,
-                onFlipTarget = viewModel::flipTarget,
-                onText = viewModel::setText,
-                onBuild = viewModel::build,
-            )
-        }
-    Box(Modifier.fillMaxSize()) {
-        DescribeScreen(state, actions)
-        V5ToastHost(toast, bottomOffset = 24.dp)
+        BlockWizardRoute(onClose, onFinish, viewModelProvider?.invoke() ?: hiltViewModel())
     }
 }
 
 @Composable
 internal fun BlockRoute(
     onOpenWizard: (target: String?, prefill: String?) -> Unit,
-    onDescribe: (target: String?) -> Unit,
     viewModel: BlockViewModel,
     savedStateHandle: SavedStateHandle? = null,
     onEditBlock: (blockId: String, target: String?) -> Unit = { _, _ -> },
@@ -209,13 +134,11 @@ internal fun BlockRoute(
     val turnedOn = stringResource(R.string.block_toast_on)
     val currentOpenWizard by rememberUpdatedState(onOpenWizard)
     val currentEditBlock by rememberUpdatedState(onEditBlock)
-    val currentDescribe by rememberUpdatedState(onDescribe)
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
             when (event) {
                 is BlockEvent.OpenWizard -> currentOpenWizard(event.target, event.prefill)
                 is BlockEvent.EditBlock -> currentEditBlock(event.blockId, event.target)
-                is BlockEvent.OpenDescribe -> currentDescribe(event.target)
             }
         }
     }
@@ -224,7 +147,6 @@ internal fun BlockRoute(
             BlockActions(
                 onSelectTarget = viewModel::selectTarget,
                 onNewBlock = viewModel::newBlock,
-                onDescribe = viewModel::describe,
                 onSelectTab = viewModel::selectTab,
                 onSetEnabled = { id, enabled ->
                     viewModel.setBlockEnabled(id, enabled)
@@ -244,13 +166,11 @@ internal fun BlockRoute(
 @Composable
 internal fun BlockWizardRoute(
     onClose: () -> Unit,
-    onDescribeWithAi: (target: String?) -> Unit,
     onFinish: (deviceId: String?, message: String) -> Unit,
     viewModel: WizardViewModel,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val currentClose by rememberUpdatedState(onClose)
-    val currentDescribe by rememberUpdatedState(onDescribeWithAi)
     val currentSaved by rememberUpdatedState(onFinish)
     val toast = rememberToastController()
     val pickOneApp = stringResource(R.string.block_wizard_pick_one_app)
@@ -259,18 +179,12 @@ internal fun BlockWizardRoute(
     val deleted = stringResource(R.string.block_deleted)
     val updateFailed = stringResource(R.string.block_wizard_update_failed)
     val deleteFailed = stringResource(R.string.block_delete_failed)
-    val reportSent = stringResource(R.string.block_report_sent)
-    val reportFailed = stringResource(R.string.block_report_failed)
     val resources = LocalResources.current
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
             when (event) {
                 WizardEvent.Close -> {
                     currentClose()
-                }
-
-                is WizardEvent.DescribeWithAi -> {
-                    currentDescribe(event.target)
                 }
 
                 WizardEvent.PickAtLeastOneApp -> {
@@ -303,14 +217,6 @@ internal fun BlockWizardRoute(
                     toast.show(deleteFailed)
                 }
 
-                WizardEvent.ReportSent -> {
-                    toast.show(reportSent)
-                }
-
-                WizardEvent.ReportFailed -> {
-                    toast.show(reportFailed)
-                }
-
                 is WizardEvent.Deleted -> {
                     currentSaved(event.deviceId, deleted)
                 }
@@ -326,7 +232,6 @@ internal fun BlockWizardRoute(
                 onPickType = viewModel::pickType,
                 onToggleApp = viewModel::toggleApp,
                 onNext = viewModel::next,
-                onDescribe = viewModel::describeWithAi,
                 onFlipTarget = viewModel::flipTarget,
                 onPeriod = viewModel::setPeriod,
                 onMins = viewModel::setMins,
@@ -337,12 +242,10 @@ internal fun BlockWizardRoute(
                 onCycleEdit = viewModel::selectCycleEdit,
                 onCycleScope = viewModel::setCycleScope,
                 onRange = viewModel::setRange,
-                onChangeType = viewModel::changeType,
                 onDelete = viewModel::deleteBlock,
                 onEditApps = viewModel::editApps,
                 onKeepEditing = viewModel::keepEditing,
                 onDiscard = viewModel::discardChanges,
-                onReport = viewModel::reportBadResult,
             )
         }
     Box(Modifier.fillMaxSize()) {

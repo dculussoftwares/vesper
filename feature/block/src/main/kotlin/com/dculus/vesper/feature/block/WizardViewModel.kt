@@ -6,7 +6,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dculus.vesper.core.data.repository.BlockRepository
 import com.dculus.vesper.core.data.repository.LinkedDevicesRepository
-import com.dculus.vesper.core.data.repository.SettingsRepository
 import com.dculus.vesper.core.model.Block
 import com.dculus.vesper.core.model.BlockDraft
 import com.dculus.vesper.core.model.BlockSource
@@ -19,8 +18,6 @@ import com.dculus.vesper.core.model.LimitPeriod
 import com.dculus.vesper.core.model.LinkedDevice
 import com.dculus.vesper.core.model.TimeRange
 import com.dculus.vesper.core.model.fallbackAppLabel
-import com.dculus.vesper.core.sync.AiReport
-import com.dculus.vesper.core.sync.AiReporter
 import com.dculus.vesper.core.sync.ParentDeviceBlocks
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
@@ -66,8 +63,6 @@ data class WizardUiState(
     val draft: BlockDraft = BlockDraft(),
     val apps: List<TargetApp> = emptyList(),
     val targets: List<WizardTargetUi> = listOf(WizardTargetUi(BlockTarget.ThisPhone, null, enabled = true)),
-    /** "Rather just describe it?" is offered only when the AI feature is on. */
-    val aiAvailable: Boolean = false,
     val cycleEdit: CycleEdit = CycleEdit.USE,
     /** True while a save is in flight; further "Turn on block" taps are ignored. */
     val saving: Boolean = false,
@@ -75,12 +70,6 @@ data class WizardUiState(
     val editing: Boolean = false,
     /** True while "Discard your changes?" is shown (back or close with unsaved edits). */
     val confirmDiscard: Boolean = false,
-    /** The sentence the AI draft came from; what "Report a bad result" sends together with the draft. */
-    val aiSentence: String = "",
-    /** The draft as the AI returned it (before the user's edits); what "Report a bad result" sends. */
-    val aiOriginal: BlockDraft? = null,
-    /** True while a report is being sent. */
-    val reporting: Boolean = false,
 ) {
     val selectedCount: Int get() = draft.apps.size
 
@@ -112,11 +101,6 @@ sealed interface WizardEvent {
     /** Leave the wizard. */
     data object Close : WizardEvent
 
-    /** "Rather just describe it?": go to the Block tab in AI mode. */
-    data class DescribeWithAi(
-        val target: String?,
-    ) : WizardEvent
-
     /** Continue was pressed on step 2 with no app selected. */
     data object PickAtLeastOneApp : WizardEvent
 
@@ -143,12 +127,6 @@ sealed interface WizardEvent {
     /** Deleting the block failed; the wizard stays open. */
     data object DeleteFailed : WizardEvent
 
-    /** "Report a bad result" was sent. */
-    data object ReportSent : WizardEvent
-
-    /** The report could not be sent. */
-    data object ReportFailed : WizardEvent
-
     /** The block being edited was deleted: go to the Block tab with [deviceId] (null = this phone) selected. */
     data class Deleted(
         val deviceId: String?,
@@ -168,12 +146,9 @@ class WizardViewModel
         savedStateHandle: SavedStateHandle,
         private val targetApps: TargetAppsProvider,
         linkedDevices: LinkedDevicesRepository,
-        settings: SettingsRepository,
         private val blocks: BlockRepository,
         private val deviceBlocks: ParentDeviceBlocks,
         private val clock: Clock,
-        private val handoff: AiDraftHandoff,
-        private val reporter: AiReporter,
     ) : ViewModel() {
         private val initialTarget: BlockTarget =
             savedStateHandle.get<String>(ARG_TARGET)?.let { BlockTarget.Device(it) } ?: BlockTarget.ThisPhone
@@ -211,22 +186,7 @@ class WizardViewModel
                         )
                     }
                 } else {
-                    val ai = if (rawPrefill == AI_PREFILL) handoff.take() else null
-                    mutableState.update { s ->
-                        if (ai != null) {
-                            // The AI draft opens straight on the rules step; it only turns on after "Turn on block".
-                            s.copy(
-                                ready = true,
-                                apps = first,
-                                draft = ai.draft.copy(fromAi = true),
-                                step = WIZARD_STEP_RULES,
-                                aiSentence = ai.sentence,
-                                aiOriginal = ai.draft.copy(fromAi = true),
-                            )
-                        } else {
-                            applyPrefill(s, first)
-                        }
-                    }
+                    mutableState.update { s -> applyPrefill(s, first) }
                 }
                 target.flatMapLatest { targetApps.apps(it) }.collect { apps ->
                     // An app that disappears (uninstalled) must not stay selected.
@@ -243,9 +203,6 @@ class WizardViewModel
                         }
                     }
                 }
-            }
-            viewModelScope.launch {
-                settings.settings.collect { s -> mutableState.update { it.copy(aiAvailable = s.aiEnabled) } }
             }
             viewModelScope.launch {
                 linkedDevices.observeAll().collect { devices ->
@@ -323,9 +280,8 @@ class WizardViewModel
             }
         }
 
-        private fun newSource(draft: BlockDraft): BlockSource =
+        private fun newSource(): BlockSource =
             when {
-                draft.fromAi -> BlockSource.AI
                 template != null -> BlockSource.TEMPLATE
                 else -> BlockSource.MANUAL
             }
@@ -353,7 +309,7 @@ class WizardViewModel
                     days = draft.days,
                     enabled = old?.enabled ?: true,
                     createdAt = old?.createdAt ?: now,
-                    source = old?.source ?: newSource(draft),
+                    source = old?.source ?: newSource(),
                 )
             val device = s.targets.firstOrNull { it.target == draft.target }?.device
             val deviceId = (draft.target as? BlockTarget.Device)?.deviceId
@@ -468,30 +424,6 @@ class WizardViewModel
 
         fun toggleDay(day: DayOfWeek) = updateDraft { copy(days = DaysOfWeek(days.mask xor (1 shl (day.value - 1)))) }
 
-        /** Entry point for the AI flow (M9-05): shows [draft] on the rules step under the "AI DRAFT" banner. */
-        internal fun openAiDraft(draft: BlockDraft) =
-            mutableState.update { it.copy(draft = draft.copy(fromAi = true), step = WIZARD_STEP_RULES) }
-
-        /** "Report a bad result" confirmed: sends the sentence and the draft as it is now shown. */
-        fun reportBadResult() {
-            val s = mutableState.value
-            if (s.reporting || !s.draft.fromAi) return
-            mutableState.update { it.copy(reporting = true) }
-            viewModelScope.launch {
-                val ok =
-                    try {
-                        reporter.report(AiReport(s.aiSentence, s.aiOriginal ?: s.draft))
-                    } finally {
-                        mutableState.update { it.copy(reporting = false) }
-                    }
-                eventChannel.send(if (ok) WizardEvent.ReportSent else WizardEvent.ReportFailed)
-            }
-        }
-
-        /** The AI draft banner's "Change": back to the type step as a manual block. */
-        fun changeType() =
-            mutableState.update { it.copy(step = WIZARD_STEP_TYPE, draft = it.draft.copy(fromAi = false)) }
-
         private fun updateDraft(change: BlockDraft.() -> BlockDraft) =
             mutableState.update { it.copy(draft = it.draft.change()) }
 
@@ -530,9 +462,6 @@ class WizardViewModel
         fun editApps() {
             if (mutableState.value.editing) mutableState.update { it.copy(step = WIZARD_STEP_APPS) }
         }
-
-        fun describeWithAi() =
-            emit(WizardEvent.DescribeWithAi((mutableState.value.draft.target as? BlockTarget.Device)?.deviceId))
 
         private fun emit(event: WizardEvent) {
             viewModelScope.launch { eventChannel.send(event) }

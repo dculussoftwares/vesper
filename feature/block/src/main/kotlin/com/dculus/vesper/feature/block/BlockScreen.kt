@@ -50,7 +50,6 @@ import com.dculus.vesper.core.model.LimitPeriod
 import com.dculus.vesper.core.model.v5Duration
 import com.dculus.vesper.core.ui.charts.TickProgress
 import com.dculus.vesper.core.ui.components.AppIconStack
-import com.dculus.vesper.core.ui.components.DescribeRow
 import com.dculus.vesper.core.ui.components.LocalTabBarPadding
 import com.dculus.vesper.core.ui.components.PillButton
 import com.dculus.vesper.core.ui.components.PillButtonVariant
@@ -71,13 +70,11 @@ import java.util.Locale
 fun blockRowTag(id: String): String = "block_row_$id"
 
 const val NEW_BLOCK_FAB_TAG = "block_new_fab"
-const val AI_FAB_TAG = "block_ai_fab"
 
 /** Callbacks of the Block tab; grouped so the screen stays a stateless function of [BlockUiState]. */
 data class BlockActions(
     val onSelectTarget: (BlockTarget) -> Unit = {},
     val onNewBlock: () -> Unit = {},
-    val onDescribe: () -> Unit = {},
     val onSelectTab: (BlockTab) -> Unit = {},
     val onSetEnabled: (id: String, enabled: Boolean) -> Unit = { _, _ -> },
     val onEdit: (id: String) -> Unit = {},
@@ -125,9 +122,6 @@ fun BlockScreen(
                 )
             }
             item { NewBlockCard(targetName, actions.onNewBlock) }
-            if (state.aiAvailable) {
-                item { DescribeRow(stringResource(R.string.block_ai_cta), actions.onDescribe) }
-            }
             item {
                 SegmentedPill(
                     options =
@@ -165,8 +159,6 @@ fun BlockScreen(
             }
         }
         Fabs(
-            aiAvailable = state.aiAvailable,
-            onAi = actions.onDescribe,
             onNew = actions.onNewBlock,
             modifier = Modifier.align(Alignment.BottomEnd).padding(end = 18.dp, bottom = tabBarPadding + 4.dp),
         )
@@ -228,37 +220,14 @@ private fun CountLine(blocks: List<BlockRowUi>) {
     )
 }
 
-/** AI sparkle FAB (white) and the green "New block" pill, floating above the tab bar (prototype 464–469). */
+/** The green "New block" pill, floating above the tab bar (prototype 464–469). */
 @Composable
 private fun Fabs(
-    aiAvailable: Boolean,
-    onAi: () -> Unit,
     onNew: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val c = VesperTheme.colors
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-        if (aiAvailable) {
-            val describe = stringResource(R.string.block_ai_cta)
-            Box(
-                modifier =
-                    Modifier
-                        .testTag(AI_FAB_TAG)
-                        .size(VesperTheme.spacing.fabSize)
-                        .shadow(
-                            14.dp,
-                            CircleShape,
-                            ambientColor = c.ink.copy(alpha = 0.45f),
-                            spotColor = c.ink.copy(alpha = 0.45f),
-                        ).clip(CircleShape)
-                        .background(c.surface)
-                        .clickable(role = Role.Button, onClick = onAi)
-                        .semantics { contentDescription = describe },
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(V5Icons.sparkle, contentDescription = null, tint = c.green, modifier = Modifier.size(20.dp))
-            }
-        }
         val pill = VesperTheme.shapes.pill
         Row(
             modifier =
@@ -511,5 +480,5 @@ private fun BlockType.tint(c: com.dculus.vesper.core.ui.theme.V5Colors): Color =
 @Preview(widthDp = 390, heightDp = 844)
 @Composable
 internal fun BlockScreenPreview() {
-    BlockScreen(BlockUiState(aiAvailable = true), BlockActions())
+    BlockScreen(BlockUiState(), BlockActions())
 }

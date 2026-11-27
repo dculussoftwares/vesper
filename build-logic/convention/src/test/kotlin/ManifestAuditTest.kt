@@ -32,14 +32,15 @@ class ManifestAuditTest {
     }
 
     @Test
-    fun `the AI SDK fails the kids audit only`() {
+    fun `the AI SDK fails the audit of both apps`() {
         val registrar =
             """<service android:name="com.google.firebase.components.ComponentDiscoveryService">
                <meta-data android:name="com.google.firebase.components:com.google.firebase.ai.FirebaseAIRegistrar"
                    android:value="com.google.firebase.components.ComponentRegistrar"/></service>"""
         val kids = ManifestAudit.auditManifest(manifest(kidsPermissions, kidsApplication + registrar), AppRole.KIDS)
         assertTrue(kids.single().contains("AI SDK"))
-        assertEquals(emptyList<String>(), ManifestAudit.auditManifest(manifest(application = registrar), AppRole.APP))
+        val app = ManifestAudit.auditManifest(manifest(application = registrar), AppRole.APP)
+        assertTrue(app.single().contains("AI SDK"))
     }
 
     @Test

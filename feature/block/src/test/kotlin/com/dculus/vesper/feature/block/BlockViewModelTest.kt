@@ -183,25 +183,6 @@ class BlockViewModelTest {
         }
 
     @Test
-    fun aiButtonOnlyShowsWhenTheFlagIsOn() =
-        runTest {
-            val vm = viewModel()
-            assertFalse(vm.state.value.aiAvailable)
-            settings.setAiAgeAnswer(true)
-            assertTrue(vm.state.value.aiAvailable)
-        }
-
-    @Test
-    fun describeOpensTheDescribeScreenForTheSelectedTarget() =
-        runTest {
-            val vm = viewModel()
-            vm.events.test {
-                vm.describe()
-                assertEquals(BlockEvent.OpenDescribe(target = null), awaitItem())
-            }
-        }
-
-    @Test
     fun tabSwitches() =
         runTest {
             val vm = viewModel()

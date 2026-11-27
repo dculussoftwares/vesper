@@ -1,5 +1,5 @@
 ---
-// Vesper Blocks tab (feature/blocks): the New block card, the describe box, and block cards whose usage meter fills
+// Vesper Blocks tab (feature/blocks): the New block card and block cards whose usage meter fills
 // minute by minute.
 import AppIcon from "./AppIcon.astro";
 
@@ -17,12 +17,6 @@ const meter = (used: number) => Array.from({ length: 40 }, (_, i) => i < used);
     </div>
     <span class="fab-ink">+</span>
   </section>
-
-  <div class="ask-pill small" data-in style="--d:180">
-    <svg class="spark" viewBox="0 0 20 20" fill="currentColor"><path d="M10 1.5c.7 3.6 1.8 5 5.3 5.9-3.5.9-4.6 2.3-5.3 5.9-.7-3.6-1.8-5-5.3-5.9 3.5-.9 4.6-2.3 5.3-5.9Zm5.5 10c.3 1.6.8 2.2 2.4 2.6-1.6.4-2.1 1-2.4 2.6-.3-1.6-.8-2.2-2.4-2.6 1.6-.4 2.1-1 2.4-2.6Z"></path></svg>
-    <span class="ask-text"><span class="ph">Or describe it in words</span></span>
-    <span class="go"><svg viewBox="0 0 20 20"><path d="M4 10h11m-4.5-4.5L15 10l-4.5 4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
-  </div>
 
   <div class="seg" data-in style="--d:240"><span class="on">Blocks</span><span>All apps</span></div>
   <p class="b-count" data-in style="--d:280">2 of 3 blocks on</p>

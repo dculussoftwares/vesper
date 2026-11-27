@@ -57,7 +57,6 @@ class WizardScreenshotTest {
             WizardUiState(
                 ready = true,
                 step = WIZARD_STEP_TYPE,
-                aiAvailable = true,
                 draft = BlockDraft(type = BlockType.CYCLE),
             ),
         )

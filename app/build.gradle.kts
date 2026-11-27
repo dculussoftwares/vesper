@@ -33,8 +33,6 @@ dependencies {
     implementation(project(":core:navigation"))
 
     implementation(platform(libs.firebase.bom))
-    // The AI SDK lives only here: Vesper Kids must not ship it (verifyManifests checks).
-    implementation(libs.firebase.ai)
     implementation(libs.firebase.messaging)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.core.splashscreen)

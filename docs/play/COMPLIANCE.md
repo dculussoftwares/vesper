@@ -18,6 +18,7 @@ wired in [`build-logic/convention/src/main/kotlin/ManifestAuditPlugin.kt`](../..
 | 6 | Target API 36 | `TARGET_SDK = 36` in the convention plugin | [`build-logic/convention/src/main/kotlin/ProjectExtensions.kt`](../../build-logic/convention/src/main/kotlin/ProjectExtensions.kt) | **Automated** (`targetSdk == 36` for both apps) |
 | 7 | Account deletion in-app and on the web | Profile screen action plus web page | [`web/src/pages/delete-account.astro`](../../web/src/pages/delete-account.astro), https://vesper.dculus.com/delete-account | Manual |
 | 8 | Privacy policy and Data safety | Hosted policy; form answers | [`web/src/pages/privacy.astro`](../../web/src/pages/privacy.astro), https://vesper.dculus.com/privacy, [`docs/play/DATA_SAFETY.md`](DATA_SAFETY.md) | Manual |
+| 9 | No AI SDK: Gemini's API terms exclude under-18s, and both apps are open to them | Neither app includes `firebase-ai` | `ManifestAudit` | **Automated** (`ManifestAudit`) |
 
 Notes
 - The bare `android.permission.FOREGROUND_SERVICE` permission is merged into `:app` by Firebase / Play services

@@ -60,16 +60,12 @@ Acceptance criteria that need a device, an emulator image or a person. Tick them
 - Check: on a real phone with Accessibility on, a 5-minute break blocks a non-allowlisted app and leaves the dialer usable; after expiry the app opens normally and a "Break over" notification appears (channel Breaks, only with the notification permission). Killing the app process mid-break leaves the countdown correct on reopening. Maestro flow `e2e/flows/smoke/take_a_break.yaml` passes on an emulator.
 - How: dial 5 min in the sheet (or 15 min preset), open Instagram or similar, dial a number, wait for the end, then `adb shell am kill com.dculus.vesper` during a second break and reopen. The engine, break-then-allowlist and "Break over" logic are covered by `BlockingEngineTest` and `AndroidBreakNotifierTest`; the flow is also run by CI job `e2e-smoke`.
 ## M4-02 Block wizard host, steps 1 and 2
-- Check: on an emulator or phone, Block tab > New block opens the wizard; tapping a type card goes to the app grid (real launcher icons and today's time); Continue with 0 apps shows "Pick at least one app"; system Back steps back one step and closes from step 1; "Rather just describe it?" returns to the Block tab with the Describe panel open (needs AI enabled in settings). The Robolectric tests cover the flow with fakes.
+- Check: on an emulator or phone, Block tab > New block opens the wizard; tapping a type card goes to the app grid (real launcher icons and today's time); Continue with 0 apps shows "Pick at least one app"; system Back steps back one step and closes from step 1; The Robolectric tests cover the flow with fakes.
 - How: install `:app`, open Block > New block. A Maestro flow can be added once step 3 and the save (M4-03 to M4-05) exist.
 
 ## M2-08 Schedules
 - Check: a schedule starting 1 minute from now blocks the already-open app when it starts; changing the device time or time zone re-evaluates immediately.
 - How: create a "Block during hours" block starting in 1 minute for a non-allowlisted app, keep the app open and watch for the block screen at the start time. Then, with the app open, move the device time across a schedule boundary (Settings > Date & time, automatic time off) and confirm blocking changes immediately; finally switch the time zone and confirm the block follows local time. Overnight (22:00-07:00) and day-chip logic is covered by RuleEvaluatorTest; the engine timer by BlockingEngineTest.
-
-## M9-03 Firebase AI Logic and App Check
-- Check: after apply on dev, a Gemini request through Firebase AI Logic without an App Check token is rejected, and one from a debug build with a registered token succeeds.
-- How: needs the maintainer bootstrap step (roles serviceusage.apiKeysAdmin/apiKeysViewer). Confirm with `curl -H "Authorization: Bearer $(gcloud auth print-access-token)" https://firebaseappcheck.googleapis.com/v1/projects/<project>/services/firebaseml.googleapis.com` and expect `"enforcementMode": "ENFORCED"`. Then, once M9-04 has a client, call the model from a debug build with no App Check debug token registered and confirm the failure is an App Check error and that the Firebase console's App Check metrics for Firebase AI Logic show unverified requests (a bare curl can be rejected by the API key restriction first, so it does not prove App Check).
 
 ## M4-03 Wizard step 3 (rules, summary, save)
 - Check: on an emulator or phone, create each of the four block types through Block > New block (ruler drag, Per day/Per hour pill, "Use for" / "Then lock" pill, schedule presets Work/School/Night/Dinner and the Custom time picker, day chips). "Turn on block" returns to the Block tab with that target selected, shows the toast "Block is on" (or "Block sent to {phone}") and the new block is in the list. The custom picker works with TalkBack and the 24 h dials look right in the dark theme.
@@ -90,10 +86,6 @@ Acceptance criteria that need a device, an emulator image or a person. Tick them
 ## M5-04 System check screen
 - Check: on a real device, each Allow row opens the right system screen and the row flips to On live on return; Accessibility goes through the disclosure first ("No thanks" leaves it as Allow); notifications ask once, then open the app's notification settings; "Continue for now" with fewer than 4 shows "Blocking needs all 4. Finish in Account." on Home.
 - How: install a debug build, revoke permissions, walk the onboarding; repeat on API 33+ (runtime notification dialog) and below 33.
-
-## M9-04 Gemini client via Firebase AI Logic
-- Check: (1) the live eval reports accuracy on the shared fixture; (2) on a debug build with Firebase configured and an App Check debug token registered, "Describe it" returns a Gemini-built rule, and with airplane mode on it still returns a rule from the on-device parser; a build without `google-services.json` also works.
-- How: (1) `GEMINI_API_KEY=<key> ./gradlew :core:sync:testDebugUnitTest --tests '*GeminiEvalTest*' -i` and read the `EVAL ACCURACY` line (the key is a personal Gemini Developer API key; never commit it). Run it nightly or before changing the prompt or model. (2) The UI that calls `AiBlockBuilder.build` lands with M9-05; until then exercise it from a debug build or test. The fake-model unit tests cover timeout, malformed JSON, errors and the fallback.
 
 ## M4-04 Edit, toggle and delete blocks
 - Check: on a device, tap a block row on the Block tab: the wizard opens at step 3 with its values and "Save changes"; saving keeps the row's position (same `createdAt`) and its on/off state. "Delete block" opens the bottom sheet ("Delete this block?" / "Delete" / "Keep it"); "Delete" removes the row and the app is no longer blocked by it. Toggling a block on the Block tab is reflected on Home and vice versa.
@@ -154,7 +146,7 @@ Acceptance criteria that need a device, an emulator image or a person. Tick them
 
 ## M10-05 Store listings for both apps
 
-- Check: a person (1) reviews `docs/play/listing/vesper.md` and `vesper-kids.md` against Google Play stalkerware and AI-Generated Content policies and ticks the checklist in `docs/play/listing/README.md`; (2) produces the icon, feature graphic and phone screenshots from real builds as listed there and commits them to `docs/play/listing/`; (3) checks the claims against the shipped build (remove anything not shipped, such as installed apps, battery level, "Report a bad result").
+- Check: a person (1) reviews `docs/play/listing/vesper.md` and `vesper-kids.md` against Google Play stalkerware policy and ticks the checklist in `docs/play/listing/README.md`; (2) produces the icon, feature graphic and phone screenshots from real builds as listed there and commits them to `docs/play/listing/`; (3) checks the claims against the shipped build (remove anything not shipped, such as installed apps, battery level).
 - How: build both apps, take screenshots with `adb exec-out screencap -p`, design the feature graphics, then open a follow-up PR with the files. The issue stays open until this is done.
 
 ## M8-06 Tamper alerts

@@ -31,19 +31,14 @@ class WizardScreenTest {
     val composeRule = createComposeRule()
 
     private fun launch() {
-        val settings = FakeSettingsRepository()
-        kotlinx.coroutines.runBlocking { settings.setAiAgeAnswer(true) }
         val vm =
             WizardViewModel(
                 SavedStateHandle(),
                 FakeTargetApps(defaultApps()),
                 FakeLinkedDevicesRepository(),
-                settings,
                 FakeBlockRepository(),
                 noDeviceBlocks(),
                 TestClock(),
-                AiDraftHandoff(),
-                FakeAiReporter(),
             )
         composeRule.setContent {
             CompositionLocalProvider(LocalInspectionMode provides true) {
@@ -56,7 +51,6 @@ class WizardScreenTest {
                             onPickType = vm::pickType,
                             onToggleApp = vm::toggleApp,
                             onNext = vm::next,
-                            onDescribe = vm::describeWithAi,
                             onFlipTarget = vm::flipTarget,
                         ),
                     )
@@ -70,7 +64,6 @@ class WizardScreenTest {
         launch()
         composeRule.onNodeWithText("Continue").assertExists()
         composeRule.onNodeWithTag(wizardTypeTag(BlockType.LIMIT)).assertIsSelected()
-        composeRule.onNodeWithText("Rather describe it in words").assertExists()
 
         composeRule.onNodeWithTag(wizardTypeTag(BlockType.SCHEDULE)).performClick()
         composeRule.onNodeWithTag(wizardTypeTag(BlockType.SCHEDULE)).assertIsSelected()
@@ -104,7 +97,6 @@ class WizardScreenTest {
         composeRule.onNodeWithTag(wizardTypeTag(BlockType.CYCLE)).performClick()
         composeRule.onNodeWithText("Continue").performClick()
         composeRule.onNodeWithTag(WIZARD_BACK_TAG).performClick()
-        composeRule.onNodeWithText("Rather describe it in words").assertExists()
         composeRule.onNodeWithTag(wizardTypeTag(BlockType.CYCLE)).assertIsSelected()
     }
 }

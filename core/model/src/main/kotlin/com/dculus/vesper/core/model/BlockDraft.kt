@@ -2,7 +2,6 @@ package com.dculus.vesper.core.model
 
 /**
  * Wizard state for a block being created (prototype `wiz*` state); defaults match the prototype `openWizard`.
- * [fromAi] drives the "Check your block" title and [aiNote] is the one-sentence restatement of the rule.
  */
 data class BlockDraft(
     val target: BlockTarget = BlockTarget.ThisPhone,
@@ -17,6 +16,4 @@ data class BlockDraft(
     val range: TimeRange = TimeRange.parse("09:00–17:00"),
     val now: Int = 60,
     val days: DaysOfWeek = DaysOfWeek.WEEKDAYS,
-    val fromAi: Boolean = false,
-    val aiNote: String = "",
 )
